@@ -8,6 +8,7 @@
 
 #include "extern.h"
 #include "watch_err.h"
+#include "gettime.h"
 
 int check_file_stat(struct list *file)
 {
@@ -23,7 +24,12 @@ int check_file_stat(struct list *file)
 		log_message(LOG_ERR, "cannot stat %s (errno = %d = '%s')", file->name, err, strerror(err));
 		return (err);
 	} else if (file->parameter.file.mtime != 0) {
-		int twait = (int)(time(NULL) - buf.st_mtime);
+		time_t now = gettime();
+		if (buf.st_mtime != file->parameter.file.stat_mtime) {
+			file->parameter.file.stat_mtime = buf.st_mtime;
+			file->parameter.file.stat_changed = now;
+		}
+		int twait = (int)(now - file->parameter.file.stat_changed);
 
 		if (twait > file->parameter.file.mtime) {
 			/* file wasn't changed often enough */
