@@ -10,7 +10,7 @@
 #endif
 
 #include <errno.h>
-#include <sys/time.h>
+#include <time.h>
 #include <netinet/ip.h>
 #include <linux/icmp.h>
 #include <fcntl.h>
@@ -31,8 +31,9 @@
 
 #include "extern.h"
 #include "watch_err.h"
+#include "gettime.h"
 
-static const long USEC = 1000000L;
+static const long NSEC = 1000000000L;
 
 /*
  * in_cksum --
@@ -70,7 +71,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 {
 	int i;
 	unsigned char outpack[MAXPACKET];
-	struct timeval tmax;
+	struct timespec tmax;
 	ldiv_t d;
 
 	if (target == NULL)
@@ -84,8 +85,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	/* set the timeout value */
 	d = ldiv(time, count);
 	tmax.tv_sec = d.quot;
-	/* Compute microseconds, including the above remainder. */
-	tmax.tv_usec = (d.rem * USEC) / count;
+	/* Compute nanoseconds, including the above remainder. */
+	tmax.tv_nsec = (d.rem * NSEC) / count;
 
 	/* try "ping-count" times */
 	for (i = 0; i < count; i++) {
@@ -93,7 +94,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		struct sockaddr_in from;
 		fd_set fdmask;
 		socklen_t fromlen;
-		struct timeval tstart, timeout, dtimeout;
+		struct timespec tstart, timeout, dtimeout;
 		struct icmphdr *icp = (struct icmphdr *)outpack;
 		struct sockaddr_in *to_in = (struct sockaddr_in *)&to;
 
@@ -120,16 +121,16 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			return (err);
 		}
 
-		gettimeofday(&tstart, NULL);
+		clock_gettime(CLOCK_MONOTONIC, &tstart);
 		/* set the timeout value */
-		timeradd(&tstart, &tmax, &timeout);
+		timespecadd(&tstart, &tmax, &timeout);
 
 		/* wait for reply */
 		FD_ZERO(&fdmask);
 		FD_SET(sock_fp, &fdmask);
 		while (1) {
-			gettimeofday(&dtimeout, NULL);
-			timersub(&timeout, &dtimeout, &dtimeout);
+			clock_gettime(CLOCK_MONOTONIC, &dtimeout);
+			timespecsub(&timeout, &dtimeout, &dtimeout);
 			/* Check if we have timed out waiting for a reply. */
 			if ((long)dtimeout.tv_sec < 0)
 				break;
@@ -140,7 +141,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 				       dtimeout.tv_sec, dtimeout.tv_usec);
 #endif
 
-			if (select(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout) >= 1) {
+			if (pselect(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout, NULL) >= 1) {
 				/* read reply */
 				fromlen = sizeof(from);
 				if (recvfrom(sock_fp, packet, PKBUF_SIZE, 0, (struct sockaddr *)&from, &fromlen) < 0) {
@@ -166,9 +167,9 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 							if (verbose && logtick && ticker == 1) {
 								/* Report time since tstart in milliseconds (like 'ping' program). */
 								double msec;
-								gettimeofday(&dtimeout, NULL);
-								timersub(&dtimeout, &tstart, &dtimeout);
-								msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-6 * dtimeout.tv_usec);
+								clock_gettime(CLOCK_MONOTONIC, &dtimeout);
+								timespecsub(&dtimeout, &tstart, &dtimeout);
+								msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-9 * dtimeout.tv_nsec);
 								log_message(LOG_DEBUG, "got answer on ping=%d from target %-15s time=%.3fms", i+1, target, msec);
 							}
 

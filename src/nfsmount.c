@@ -60,6 +60,7 @@
 #include <linux/nfs.h>
 #include "mount_constants.h"
 #include "nfs_mount4.h"
+#include "gettime.h"
 
 #define HAVE_inet_aton
 
@@ -531,7 +532,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 	retry_timeout.tv_usec = 0;
 	total_timeout.tv_sec = 20;
 	total_timeout.tv_usec = 0;
-	timeout = time(NULL) + 60 * retry;
+	timeout = gettime() + 60 * retry;
 	prevt = 0;
 	t = 30;
 	val = 1;
@@ -628,7 +629,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 				retval = EX_BG;
 			goto fail;
 		}
-		t = time(NULL);
+		t = gettime();
 		if (t >= timeout)
 			goto fail;
 	}

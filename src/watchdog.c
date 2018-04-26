@@ -38,6 +38,7 @@
 
 #include "watch_err.h"
 #include "extern.h"
+#include "gettime.h"
 
 static int no_act = FALSE;
 char *filename_buf;
@@ -201,7 +202,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		/* error that might be repairable */
 		if (act != NULL && retry_timeout > 0) {
 			/* timer possible and used to allow re-try */
-			time_t now = time(NULL);
+			time_t now = gettime();
 			timeout = FALSE;
 
 			if (act->last_time == 0) {
