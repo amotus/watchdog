@@ -193,6 +193,33 @@ static void kill_everything_else(int aflag, int stime)
 	}
 }
 
+/*
+ * Record the system shut-down.
+ */
+
+static void write_wtmp(void)
+{
+	time_t t;
+	struct utmp wtmp;
+	const char *fname = _PATH_WTMP;
+	int fd;
+
+	if ((fd = open(fname, O_WRONLY | O_APPEND)) >= 0) {
+		memset(&wtmp, 0, sizeof(wtmp));
+		time(&t);
+		strcpy(wtmp.ut_user, "shutdown");
+		strcpy(wtmp.ut_line, "~");
+		strcpy(wtmp.ut_id, "~~");
+		wtmp.ut_pid = 0;
+		wtmp.ut_type = RUN_LVL;
+		wtmp.ut_time = t;
+		if (write(fd, (char *)&wtmp, sizeof(wtmp)) < 0)
+			log_message(LOG_ERR, "failed writing wtmp (%s)", strerror(errno));
+		close(fd);
+	}
+}
+
+
 /* part that tries to shut down the system cleanly */
 static void try_clean_shutdown(int errorcode)
 {
@@ -231,22 +258,7 @@ static void try_clean_shutdown(int errorcode)
 	remove_pid_file();
 
 	/* Record the fact that we're going down */
-	if ((fd = open(_PATH_WTMP, O_WRONLY | O_APPEND)) >= 0) {
-		time_t t;
-		struct utmp wtmp;
-		memset(&wtmp, 0, sizeof(wtmp));
-
-		time(&t);
-		strcpy(wtmp.ut_user, "shutdown");
-		strcpy(wtmp.ut_line, "~");
-		strcpy(wtmp.ut_id, "~~");
-		wtmp.ut_pid = 0;
-		wtmp.ut_type = RUN_LVL;
-		wtmp.ut_time = t;
-		if (write(fd, (char *)&wtmp, sizeof(wtmp)) < 0)
-			log_message(LOG_ERR, "failed writing wtmp (%s)", strerror(errno));
-		close(fd);
-	}
+	write_wtmp();
 
 	/* save the random seed if a save location exists */
 	/* don't worry about error messages, we react here anyway */
