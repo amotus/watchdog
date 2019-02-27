@@ -107,6 +107,9 @@ extern struct list *pidfile_list;
 extern struct list *iface_list;
 extern struct list *temp_list;
 
+extern struct list *memtimer;
+extern struct list *loadtimer;
+
 extern char *repair_bin;
 
 /* = Not (yet) from config file. = */
@@ -151,6 +154,7 @@ int close_loadcheck(void);
 /** net.c **/
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
 int open_netcheck(struct list *tlist);
+int close_netcheck(struct list *tlist);
 
 /** temp.c **/
 int open_tempcheck(struct list *tlist);
@@ -194,6 +198,7 @@ int wd_daemon(int nochdir, int noclose);
 
 /** configfile.c **/
 void read_config(char *configfile);
+void free_all_lists(void);
 
 /** killall5.c **/
 void killall5(int sig, int aflag);

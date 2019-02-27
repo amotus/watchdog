@@ -108,6 +108,10 @@ struct list *pidfile_list = NULL;
 struct list *iface_list = NULL;
 struct list *temp_list = NULL;
 
+/* Dummy lists for the load averages & memory checking. */
+struct list *memtimer = NULL;
+struct list *loadtimer = NULL;
+
 char *repair_bin = NULL;
 
 /* Command line options also used globally. */
@@ -153,6 +157,9 @@ void read_config(char *configfile)
 	char *line = NULL, *arg=NULL, *val=NULL;
 	size_t n = 0;
 	int linecount = 0;
+
+	add_list(&memtimer, "<free-memory>", 0);
+	add_list(&loadtimer, "<load-average>", 0);
 
 	maxload5 = maxload15 = 0;
 
@@ -325,4 +332,20 @@ static void add_test_binaries(const char *path)
 	} while (1);
 
 	closedir(d);
+}
+
+/*
+ * Free all of the lists allocated by read_config()
+ */
+
+void free_all_lists(void)
+{
+	free_list(&tr_bin_list);
+	free_list(&file_list);
+	free_list(&target_list);
+	free_list(&pidfile_list);
+	free_list(&iface_list);
+	free_list(&temp_list);
+	free_list(&loadtimer);
+	free_list(&memtimer);
 }

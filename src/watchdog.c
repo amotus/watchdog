@@ -347,8 +347,6 @@ int main(int argc, char *const argv[])
 	long count = 0L;
 	long count_max = 0L;
 	unsigned long swait, twait;
-	struct list *memtimer = NULL;
-	struct list *loadtimer = NULL;
 
 	progname = basename(argv[0]);
 	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
@@ -399,9 +397,6 @@ int main(int argc, char *const argv[])
 			usage(progname);
 		}
 	}
-
-	add_list(&memtimer, "<free-memory>", 0);
-	add_list(&loadtimer, "<load-average>", 0);
 
 	read_config(configfile);
 
@@ -538,9 +533,7 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	free_list(&loadtimer);
-	free_list(&memtimer);
-
+	free_all_lists();
 	terminate(EXIT_SUCCESS);
 	/* not reached */
 	return (EXIT_SUCCESS);
