@@ -16,7 +16,7 @@ src/wd_keepalive
 
 # Ignore remaining files create/modified by the steps:
 # autoreconf -i
-# ./configure 
+# ./configure
 # make
 
 Makefile
@@ -36,3 +36,5 @@ missing
 src/Makefile
 src/Makefile.in
 
+# For the coverity (synopsis) build scan tool
+src/cov-int
