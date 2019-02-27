@@ -20,6 +20,8 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mount.h> /* For MNT_FORCE  */
+#include <sys/swap.h> /* for swapoff() */
 #include <unistd.h>
 #include <time.h>
 
@@ -49,13 +51,6 @@
 #define RB_POWER_OFF	0xfee1dead,672274793,0x4321fedc /* Stop system and switch power off if possible.  */
 #endif /*RB_AUTOBOOT*/
 #endif /* !__GLIBC__ */
-
-extern void umount_all(void *);
-extern int ifdown(void);
-#if 0
-extern int mount_one(char *, char *, char *, char *, int, int);
-static struct mntent rootfs;
-#endif
 
 /* close the device and check for error */
 static void close_all(void)
@@ -98,58 +93,95 @@ static void panic(void)
 	exit(1);
 }
 
+/*
+ * Unmount file ourselves, this code adapted from util-linux-2.17.2/login-utils/shutdown.c
+ * However, they also try running the 'umount' binary first, as it might be smarter.
+ */
+
+#define NUM_MNTLIST 128
+
 static void mnt_off(void)
 {
 	FILE *fp;
 	struct mntent *mnt;
+	char *mntlist[NUM_MNTLIST];
+	const char *fname = _PATH_MOUNTED;
+	int n = 0;
+	int i;
 
-	fp = setmntent(_PATH_MNTTAB, "r");
+	keep_alive();
+	/* Could this hang the system? Hardware watchdog will kick in, but might be
+	 * better to try fork() and idle for a while before forcing unmounts?
+	 */
+	sync();
+	keep_alive();
+
+	if (!(fp = setmntent(fname, "r"))) {
+		log_message(LOG_ERR, "could not open %s (%s)", fname, strerror(errno));
+		return;
+	}
+
 	/* in some rare cases fp might be NULL so be careful */
-	while (fp != NULL && ((mnt = getmntent(fp)) != (struct mntent *)0)) {
+	while (n < NUM_MNTLIST && (mnt = getmntent(fp)) != NULL) {
 		/* First check if swap */
-		if (!strcmp(mnt->mnt_type, MNTTYPE_SWAP))
+		if (!strcmp(mnt->mnt_type, MNTTYPE_SWAP)) {
 			if (swapoff(mnt->mnt_fsname) < 0)
 				perror(mnt->mnt_fsname);
+		} else {
+			/* quota only if mounted at boot time && filesytem=ext2 */
+			if (!hasmntopt(mnt, MNTOPT_NOAUTO) && !strcmp(mnt->mnt_type, MNTTYPE_EXT2)) {
+				/* group quota? */
+				if (hasmntopt(mnt, MNTOPT_GRPQUOTA)) {
+					if (quotactl(QCMD(Q_QUOTAOFF, GRPQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0) {
+						perror(mnt->mnt_fsname);
+					}
+				}
 
-		/* quota only if mounted at boot time && filesytem=ext2 */
-		if (hasmntopt(mnt, MNTOPT_NOAUTO) || strcmp(mnt->mnt_type, MNTTYPE_EXT2))
-			continue;
-
-		/* group quota? */
-		if (hasmntopt(mnt, MNTOPT_GRPQUOTA))
-			if (quotactl(QCMD(Q_QUOTAOFF, GRPQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0)
-				perror(mnt->mnt_fsname);
-
-		/* user quota */
-		if (hasmntopt(mnt, MNTOPT_USRQUOTA))
-			if (quotactl(QCMD(Q_QUOTAOFF, USRQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0)
-				perror(mnt->mnt_fsname);
-
-#if 0
-		/* not needed anymore */
-		/* while we're at it we add the remount option */
-		if (strcmp(mnt->mnt_dir, "/") == 0) {
-			/* save entry if root partition */
-			rootfs.mnt_freq = mnt->mnt_freq;
-			rootfs.mnt_passno = mnt->mnt_passno;
-
-			rootfs.mnt_fsname = strdup(mnt->mnt_fsname);
-			rootfs.mnt_dir = strdup(mnt->mnt_dir);
-			rootfs.mnt_type = strdup(mnt->mnt_type);
-
-			/* did we get enough memory? */
-			if (rootfs.mnt_fsname == NULL || rootfs.mnt_dir == NULL || rootfs.mnt_type == NULL) {
-				log_message(LOG_ERR, "out of memory");
+				/* user quota */
+				if (hasmntopt(mnt, MNTOPT_USRQUOTA)) {
+					if (quotactl(QCMD(Q_QUOTAOFF, USRQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0) {
+						perror(mnt->mnt_fsname);
+					}
+				}
 			}
 
-			if ((rootfs.mnt_opts = malloc(strlen(mnt->mnt_opts) + strlen("remount,ro") + 2)) == NULL) {
-				log_message(LOG_ERR, "out of memory");
-			} else
-				sprintf(rootfs.mnt_opts, "%s,remount,ro", mnt->mnt_opts);
+			/*
+			 * Neil Phillips: trying to unmount temporary / kernel
+			 * filesystems is pointless and may cause error messages;
+			 * /dev can be a ramfs managed by udev.
+			 */
+			if (strcmp(mnt->mnt_type, "devfs") == 0 ||
+				strcmp(mnt->mnt_type, "proc")  == 0 ||
+				strcmp(mnt->mnt_type, "sysfs") == 0 ||
+				strcmp(mnt->mnt_type, "ramfs") == 0 ||
+				strcmp(mnt->mnt_type, "tmpfs") == 0 ||
+				strcmp(mnt->mnt_type, "devpts") == 0 ||
+				strcmp(mnt->mnt_type, "devtmpfs") == 0) {
+				continue;
+			}
+		mntlist[n++] = strdup(mnt->mnt_dir);
 		}
-#endif
 	}
+
 	endmntent(fp);
+	fclose(fp);
+
+	/* we are careful to do this in reverse order of the mtab file */
+
+	for (i = n - 1; i >= 0; i--) {
+		char *filesys = mntlist[i];
+
+		log_message(LOG_DEBUG, "unmounting %s", filesys);
+		keep_alive();
+
+#if defined( MNT_FORCE )
+		if (umount2(filesys, MNT_FORCE) < 0) {
+#else
+		if (umount(filesys) < 0) {
+#endif /*!MNT_FORCE*/
+			log_message(LOG_ERR, "could not unmount %s (%s)", filesys, strerror(errno));
+		}
+	}
 }
 
 /*
@@ -304,19 +336,6 @@ static void try_clean_shutdown(int errorcode)
 	/* Turn off quota and swap */
 	mnt_off();
 
-	/* umount all partitions */
-	umount_all(NULL);
-
-#if 0
-	/* with the more recent version of mount code, this is not needed anymore */
-	/* remount / read-only */
-	//if (setjmp(ret2dog) == 0)
-		mount_one(rootfs.mnt_fsname, rootfs.mnt_dir, rootfs.mnt_type,
-			  rootfs.mnt_opts, rootfs.mnt_freq, rootfs.mnt_passno);
-#endif
-
-	/* shut down interfaces (also taken from sysvinit source */
-	ifdown();
 }
 
 /* shut down the system */

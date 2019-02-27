@@ -1,9 +1,9 @@
 sbin_PROGRAMS = watchdog wd_keepalive wd_identify
 
-watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c gettime.c keep_alive.c \
-			load.c lomount.c memory.c mntent.c mount.c net.c nfsmount.c \
-			nfsmount_clnt.c nfsmount_xdr.c pidfile.c shutdown.c sundries.c \
-			temp.c test_binary.c umount.c version.c watchdog.c \
+watchdog_SOURCES = file_stat.c file_table.c iface.c gettime.c keep_alive.c \
+			load.c memory.c net.c \
+			pidfile.c shutdown.c \
+			temp.c test_binary.c watchdog.c \
 			logmessage.c xmalloc.c heartbeat.c lock_mem.c daemon-pid.c configfile.c \
 			errorcodes.c read-conf.c sigterm.c reopenstd.c killall5.c send-email.c \
 			run-as-child.c
