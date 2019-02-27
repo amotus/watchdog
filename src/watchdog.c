@@ -39,6 +39,7 @@
 #include "watch_err.h"
 #include "extern.h"
 #include "gettime.h"
+#include "read-conf.h"
 
 static int no_act = FALSE;
 
