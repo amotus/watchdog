@@ -139,7 +139,8 @@ static void free_plist(void)
 
 static int read_proc_line(pid_t pid, const char *opt, size_t bsize, char *buf)
 {
-	int fd, nread;
+	int fd;
+	int nread = 0;
 	char fname[BUFFER_SIZE];
 	int rv = -1;
 
@@ -153,21 +154,27 @@ static int read_proc_line(pid_t pid, const char *opt, size_t bsize, char *buf)
 		log_message(LOG_ERR, "failed to open %s (%s)", fname, strerror(errno));
 	} else {
 		nread = read(fd, buf, bsize-1);
-
-		if (nread > 0) {
-			int ii;
-			/* Force 'nul' terminator. */
-			buf[nread] = 0;
-			/* Convert any 'nul' separators (e.g. the command line arguments)
-			 * in to spaces for string handling & readability in text file.
-			 */
-			for (ii=0; ii<nread; ii++) {
-				if(buf[ii] == 0)
-					buf[ii] = ' ';
-			}
-			rv = 0;	/* Indicate useful data read. */
-		}
 		close(fd);
+	}
+
+	if (nread > 0 && nread < bsize) {
+		int ii;
+		/* Convert any 'nul' separators (e.g. the command line arguments)
+		 * in to spaces for string handling & readability in text file.
+		 */
+		for (ii=0; ii<nread; ii++) {
+			if(buf[ii] == 0) {
+				buf[ii] = ' ';
+			}
+		}
+
+		/* Force 'nul' terminator. */
+		buf[ii] = 0;
+		/* Indicate useful data read. */
+		rv = 0;
+	} else {
+		/* Just in case, force 'nul' terminator. */
+		buf[0] = 0;
 	}
 
 	return rv;
