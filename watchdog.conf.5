@@ -1,4 +1,4 @@
-.TH WATCHDOG.CONF 5 "January 2016"
+.TH WATCHDOG.CONF 5 "February 2019"
 .UC 4
 .SH NAME
 watchdog.conf \- configuration file for the watchdog daemon
@@ -13,8 +13,8 @@ interval = <interval>
 Set the highest possible interval between two writes to the watchdog device.
 The device is triggered after each check regardless of the time it took. After
 finishing all checks watchdog goes to sleep for a full cycle of <interval>
-seconds. Default value is 1 second. The kernel drivers expects a write command
-every minute. Otherwise the system will be rebooted.  Therefore an interval of
+seconds. Default value is 1 second. The kernel drivers typically expects a write command
+every minute otherwise the system will be rebooted.  Therefore an interval of
 more than a minute can only be used with the force command-line option [\-\-force | \-f].
 .TP
 logtick = <logtick>
@@ -81,11 +81,12 @@ by the
 .B sensors
 package, but take care as device enumeration may not be fixed. Default is to
 disable temperature checking. Multiple sensors can be used by having repeated
-temperature-sensor entries.
+temperature-sensor entries. Due to the enumeration problem any missing temp
+sensor is simply ignored and not treated as a reboot trigger.
 .TP
 max-temperature = <temp>
-Set the maximal allowed temperature. Once this temperature is reached the
-system is stopped. Default value is 90 C. Watchdog will issue warnings
+Set the maximal allowed temperature in Celsius. Once this temperature is reached
+the system is stopped. Default value is 90 C. Watchdog will issue warnings
 once the temperature increases 90%, 95% and 98% of this temperature.
 .TP
 temp-power-off = <yes|no>
@@ -109,13 +110,17 @@ special syslog daemon configuration, e.g. rsyslog needs
 no matter what.
 .TP
 pidfile = <pidfilename>
-Set pidfile name for server test mode.
-This option can be given as often as you like to check several servers.
+Set pidfile name for daemon test mode.
+This option can be given as often as you like to check several daemons, assuming
+they write their post-forking PID to the specified files.
 .TP
 ping = <ip-addr>
 Set IPv4 address for ping mode.
-This option can be used more than once to check different
-connections.
+This option can be used more than once to check different connections.
+.TP
+ping-count = <ping-per-interval>
+Set the number of ping attempts in each 'interval' of time. Default is 3 and it
+completes on the first successful ping.
 .TP
 interface = <if-name>
 Set interface name for network mode.
@@ -148,6 +153,10 @@ report success (i.e. return 0), but fail to clear the fault, before a reboot
 is initiated anyway. If set to zero then a repairable fault can always be
 blocked by a repair program reporting success (previous daemon behaviour).
 .TP
+softboot-option = <yes|no>
+This acts like the \-b / \-\-softboot command line and simply sets the
+retry timeout to zero.
+.TP
 admin = <mail-address>
 Email address to send admin mail to. That is, who shall be notified that the
 machine is being halted or rebooted. Default is 'root'. If you want to disable
@@ -158,7 +167,7 @@ If set to yes watchdog will lock itself into memory so it is never swapped
 out.
 .TP
 priority = <schedule priority>
-Set the schedule priority for realtime mode.
+Set the schedule priority for realtime mode passed to sched_setscheduler().
 .TP
 test-directory = <test directory>
 Set the directory to run user test/repair scripts.  Default is '/etc/watchdog.d'
@@ -174,9 +183,24 @@ sending SIGKILL. Default is 5 seconds which is generally enough, but systems wit
 large databases or virtual machines might need longer.
 .TP
 verbose = <yes|no>
-This overrides the command line --verbose option. Generally the verbose mode is
+This overrides the command line \-\-verbose option. Generally the verbose mode is
 only enabled for debugging as it creates a lot of syslog chatter, so use this option
 with consideration.
+.TP
+heartbeat-file = <filename>
+For debugging this allows a rolling set of status values to be kept on disk
+.TP
+heartbeat-stamps = <interval>
+For debugging this sets the number of entries in the <heartbeat-file>
+.TP
+log-killed-pids = <yes|no>
+This acts like enabling 'verbose' logging, but only for a system reboot, where it
+enables the logging of the PID values for all processes that are being killed. The
+results are written to the killall5.log file in the log directory (if at all
+possible) in this case.
+Intended for debugging cases where you would like to know what was running at the
+point the machine triggered the watchdog, but don't want syslog filling up with the
+usual chatter of activity.
 .SH FILES
 .TP
 .I /etc/watchdog.conf

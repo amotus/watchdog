@@ -1,4 +1,4 @@
-.TH WATCHDOG 8 "January 2016"
+.TH WATCHDOG 8 "February 2019"
 .UC 4
 .SH NAME
 watchdog \- a software watchdog daemon
@@ -78,7 +78,8 @@ with priority
 .IR LOG_DEBUG.
 This is useful if you want to see exactly what happened until the watchdog rebooted
 the system. Currently it logs the temperature (if available), the load
-average, the change date of the files it checks and how often it went to sleep.
+average, the change date of the files it checks and how often it went to sleep. You
+can use this twice to enable some more verbose debug message for testing.
 .TP
 .BR \-s ", " \-\-sync
 Try to synchronize the filesystem every time the process is awake. Note that
@@ -287,12 +288,8 @@ Turn off accounting.
 .IP 6. 4
 Turn off quota and swap.
 .IP 7. 4
-Unmount all partitions except the root partition.
+Unmount all partitions
 .IP 8. 4
-Remount the root partition read-only.
-.IP 9. 4
-Shut down all network interfaces.
-.IP 10. 4
 Finally reboot.
 .SH "CHECK BINARY"
 If the return code of the check binary is not zero
@@ -308,7 +305,8 @@ system error code (see
 for details). Values of 245 or larger than are special to
 .BR watchdog :
 .TP
-255 (based on \-1 as unsigned 8\-bit number)
+255
+(based on \-1 as unsigned 8\-bit number)
 Reboot the system. This is not exactly an error message but a command to
 .BR watchdog .
 If the return code is this the
@@ -386,7 +384,7 @@ These executables are called with either "test" as the first argument
 (if a test is being performed) or "repair" as the first argument (if a
 repair for a previously-failed "test" operation on is being performed).
 
-The as with test binaries and repair binaries, expected exit codes for
+As with test binaries and repair binaries, expected exit codes for
 a successful test or repair operation is always zero.
 
 If an executable's test operation fails, the same executable is automatically
