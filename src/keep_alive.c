@@ -116,7 +116,7 @@ int open_watchdog(char *name, int timeout)
 static int try_other_times(const int timeout)
 {
 	static const int try_values[] = {3, 5, 10};
-	static const int num_try = sizeof(try_values) / sizeof(int);
+	static const int num_try = ARRAY_SIZE(try_values);
 	int ii;
 
 	for (ii = 0; ii < num_try; ii++) {

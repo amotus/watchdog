@@ -110,12 +110,12 @@ static int ignore_fs(const struct mntent *mnt)
 		"devfs", "proc", "sysfs", "ramfs",
 		"tmpfs", "devpts", "devtmpfs", "tracefs"
 	};
-	const int num_temp = sizeof(temp) / sizeof(temp[0]);
+	const int num_temp = ARRAY_SIZE(temp);
 
 	const char *ignore[] = {
 		"/run/", "/sys/", "/proc/", "/dev/"
 	};
-	const int num_ignore = sizeof(ignore) / sizeof(ignore[0]);
+	const int num_ignore = ARRAY_SIZE(ignore);
 
 	/*
 	 * Check for known temporary file systems

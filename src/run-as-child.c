@@ -38,7 +38,7 @@ const unsigned long wait_val[] = {
 	WAIT_MS(400)	/* 1000ms = 1 second */
 };
 
-const int num_wait = sizeof(wait_val) / sizeof(unsigned long);
+const int num_wait = ARRAY_SIZE(wait_val);
 
 /*
  * Code to (optionally) sync the file system, then execv() the supplied process.

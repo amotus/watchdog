@@ -9,6 +9,13 @@
 #include "logmessage.h"
 #include "xmalloc.h"
 
+/*
+ * Define a macro to get the size of statically allocated arrays.
+ */
+#if !defined( ARRAY_SIZE )
+#define ARRAY_SIZE(_x) (sizeof(_x) / sizeof(_x[0]))
+#endif /*!ARRAY_SIZE*/
+
 /* === Variable types === */
 struct pingmode {
 	struct sockaddr to;
