@@ -4,6 +4,7 @@
 
 #define _XOPEN_SOURCE 500	/* for getsid(2) */
 #define _BSD_SOURCE		/* for acct(2) */
+#define _DEFAULT_SOURCE	/* To stop complaints with gcc >= 2.19 */
 
 #include <dirent.h>
 #include <errno.h>
