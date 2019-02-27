@@ -130,6 +130,7 @@ extern pid_t daemon_pid;
 
 /** file_stat.c **/
 int check_file_stat(struct list *);
+int check_file_stat_safe(struct list *file);
 
 /** file_table.c **/
 int check_file_table(void);

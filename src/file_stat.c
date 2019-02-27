@@ -52,3 +52,37 @@ int check_file_stat(struct list *file)
 	}
 	return (ENOERR);
 }
+
+/*
+ * Present check_file_stat() in manner for run_func_as_child() to call.
+ * In this case 'code' is not used.
+ */
+
+static int run_func(int code, void *ptr)
+{
+	return check_file_stat((struct list *)ptr);
+}
+
+/*
+ * An alternative to check_file_stat() that forks the process to run
+ * it as a child, so a time-out on NFS access, etc, won't trigger a hardware
+ * reset, so the main daemon has a chance to reboot cleanly.
+ */
+
+int check_file_stat_safe(struct list *file)
+{
+	const int CHECK_TIMEOUT = 5;
+	int ret;
+
+	if (file == NULL) {
+		return (ENOERR);
+	}
+
+	ret = run_func_as_child(CHECK_TIMEOUT, run_func, 0, file);
+
+	if (ret == ETOOLONG) {
+		log_message(LOG_ERR, "timeout getting file status for %s", file->name);
+	}
+
+	return (ret);
+}
