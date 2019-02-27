@@ -52,15 +52,20 @@
 #endif /*RB_AUTOBOOT*/
 #endif /* !__GLIBC__ */
 
-/* close the device and check for error */
-static void close_all(void)
+/*
+ * Close all the device except for the watchdog.
+ */
+
+static void close_all_but_watchdog(void)
 {
-	close_watchdog();
 	close_loadcheck();
 	close_memcheck();
 	close_tempcheck();
 	close_heartbeat();
+	close_netcheck(target_list);
+
 	free_process();		/* What check_bin() was waiting to report. */
+	free_all_lists();	/* Memory used by read_config() */
 }
 
 /* on exit we close the device and log that we stop */
@@ -68,7 +73,8 @@ void terminate(int ecode)
 {
 	log_message(LOG_NOTICE, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	unlock_our_memory();
-	close_all();
+	close_all_but_watchdog();
+	close_watchdog();
 	remove_pid_file();
 	close_logging();
 	usleep(100000);		/* 0.1s to make sure log is written */
@@ -88,7 +94,7 @@ static void panic(void)
 
 	/* if we are still alive, we just exit */
 	log_message(LOG_ALERT, "WATCHDOG PANIC: still alive after sleeping %d seconds", 4 * dev_timeout);
-	close_all();
+	close_all_but_watchdog();
 	close_logging();
 	exit(1);
 }
@@ -182,22 +188,6 @@ static void mnt_off(void)
 			log_message(LOG_ERR, "could not unmount %s (%s)", filesys, strerror(errno));
 		}
 	}
-}
-
-/*
- * Close all the device except for the watchdog.
- */
-
-static void close_all_but_watchdog(void)
-{
-	close_loadcheck();
-	close_memcheck();
-	close_tempcheck();
-	close_heartbeat();
-	close_netcheck(target_list);
-
-	free_process();		/* What check_bin() was waiting to report. */
-	free_all_lists();	/* Memory used by read_config() */
 }
 
 /*
@@ -298,7 +288,6 @@ static void try_clean_shutdown(int errorcode)
 {
 	/* soft-boot the system */
 	/* do not close open files here, they will be closed later anyway */
-	/* close_all(); */
 
 	/* if we will halt the system we should try to tell a sysadmin */
 	if (admin != NULL) {
