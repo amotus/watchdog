@@ -10,7 +10,7 @@ watchdog_CFLAGS = $(RPC_CFLAGS)
 watchdog_LDADD = $(RPC_LIBS)
 
 # for glibc before 2.17 due to clock_gettime()
-watchdog_LDADD = -lrt
+watchdog_LDADD += -lrt
 
 wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmalloc.c \
 			configfile.c keep_alive.c read-conf.c sigterm.c
