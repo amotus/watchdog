@@ -185,6 +185,29 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 }
 
 /*
+ * Close socket and free the packet buffer. As we zero this memory when originally
+ * allocating it, a non-NULL packet buffer is an indicator it was opened.
+ */
+
+static int close_net(struct pingmode *net)
+{
+	int err = ENOERR;
+
+	if (net->packet != NULL) {
+		free(net->packet);
+		net->packet = NULL;
+
+		if (close(net->sock_fp) < 0) {
+			err = errno;
+			log_message(LOG_ERR, "error closing socket (err = %d = '%s')", err, strerror(err));
+		}
+		net->sock_fp = -1;
+	}
+
+	return err;
+}
+
+/*
  * Set up pinging if in ping mode
  */
 
@@ -209,6 +232,8 @@ int open_netcheck(struct list *tlist)
 		for (act = tlist; act != NULL; act = act->next) {
 			struct pingmode *net = &act->parameter.net; /* 'net' is alias of act->parameter.net */
 			struct sockaddr_in *to_in;
+
+			close_net(net);
 
 			/* setup the socket */
 			memset(&(net->to), 0, sizeof(struct sockaddr));
@@ -257,4 +282,22 @@ int open_netcheck(struct list *tlist)
 	}
 
 	return 0;
+}
+
+/*
+ * Shut sockets and free memory as allocated by open_netcheck().
+ */
+
+int close_netcheck(struct list *tlist)
+{
+	int err = 0;
+	struct list *act;
+
+	if (tlist != NULL) {
+		for (act = tlist; act != NULL; act = act->next) {
+			err |= close_net(&act->parameter.net);
+		}
+	}
+
+	return err;
 }
