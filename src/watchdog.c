@@ -385,6 +385,8 @@ int main(int argc, char *const argv[])
 	long count = 0L;
 	long count_max = 0L;
 	unsigned long swait, twait;
+	struct list *memtimer = NULL;
+	struct list *loadtimer = NULL;
 
 	progname = basename(argv[0]);
 	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
@@ -435,6 +437,9 @@ int main(int argc, char *const argv[])
 			usage(progname);
 		}
 	}
+
+	add_list(&memtimer, "<free-memory>", 0);
+	add_list(&loadtimer, "<load-average>", 0);
 
 	read_config(configfile);
 
@@ -515,13 +520,13 @@ int main(int argc, char *const argv[])
 		do_check(check_file_table(), repair_bin, NULL);
 
 		/* check load average */
-		do_check(check_load(), repair_bin, NULL);
+		do_check(check_load(), repair_bin, loadtimer);
 
 		/* check free memory */
-		do_check(check_memory(), repair_bin, NULL);
+		do_check(check_memory(), repair_bin, memtimer);
 
 		/* check allocatable memory */
-		do_check(check_allocatable(), repair_bin, NULL);
+		do_check(check_allocatable(), repair_bin, memtimer);
 
 		/* check temperature */
 		for (act = temp_list; act != NULL; act = act->next)
@@ -570,6 +575,9 @@ int main(int argc, char *const argv[])
 			_running = 0;
 		}
 	}
+
+	free_list(&loadtimer);
+	free_list(&memtimer);
 
 	terminate(EXIT_SUCCESS);
 	/* not reached */
