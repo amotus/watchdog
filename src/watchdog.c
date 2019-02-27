@@ -424,7 +424,7 @@ int main(int argc, char *const argv[])
 			no_act = TRUE;
 			break;
 		case 'v':
-			verbose = TRUE;
+			verbose++;
 			break;
 		case 'X':
 			count_max = atol(optarg);
