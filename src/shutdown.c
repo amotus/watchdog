@@ -219,12 +219,36 @@ static void write_wtmp(void)
 	}
 }
 
+/*
+ * Save the random seed if a save location exists.
+ * Don't worry about error messages, we react here anyway
+ */
+
+static void save_urandom(void)
+{
+	const char *seedbck = RANDOM_SEED;
+	int fd_seed, fd_bck;
+	char buf[512];
+
+	if (strlen(seedbck) != 0) {
+		if ((fd_seed = open("/dev/urandom", O_RDONLY)) >= 0) {
+			if ((fd_bck = creat(seedbck, S_IRUSR | S_IWUSR)) >= 0) {
+				if (read(fd_seed, buf, sizeof(buf)) == sizeof(buf)) {
+					if (write(fd_bck, buf, sizeof(buf)) < 0) {
+						log_message(LOG_ERR, "failed writing urandom (%s)", strerror(errno));
+					}
+				}
+				close(fd_bck);
+			}
+			close(fd_seed);
+		}
+	}
+}
 
 /* part that tries to shut down the system cleanly */
 static void try_clean_shutdown(int errorcode)
 {
-	int i = 0, fd;
-	char *seedbck = RANDOM_SEED;
+	int i = 0;
 
 	/* soft-boot the system */
 	/* do not close open files here, they will be closed later anyway */
@@ -261,25 +285,7 @@ static void try_clean_shutdown(int errorcode)
 	write_wtmp();
 
 	/* save the random seed if a save location exists */
-	/* don't worry about error messages, we react here anyway */
-	if (strlen(seedbck) != 0) {
-		int fd_seed;
-
-		if ((fd_seed = open("/dev/urandom", O_RDONLY)) >= 0) {
-			int fd_bck;
-
-			if ((fd_bck = creat(seedbck, S_IRUSR | S_IWUSR)) >= 0) {
-				char buf[512];
-
-				if (read(fd_seed, buf, 512) == 512) {
-					if (write(fd_bck, buf, 512) < 0)
-						log_message(LOG_ERR, "failed writing urandom (%s)", strerror(errno));
-				}
-				close(fd_bck);
-			}
-			close(fd_seed);
-		}
-	}
+	save_urandom();
 
 	/* Turn off accounting */
 	if (acct(NULL) < 0)
