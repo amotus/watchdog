@@ -100,19 +100,24 @@ static int do_reopen(int idx, FILE *fp, const char *sfx)
 		}
 	}
 
-	fd_new = open(rname, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
-	fd_old = fileno(fp);
+	fd_new = fileno(fp);
 
-	if (fd_new == -1) {
+	fd_old = open(rname, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
+
+	if (fd_old < 0) {
 		err = errno;
 		log_message(LOG_WARNING, "unable to open %s (%s)", rname, strerror(err));
-	} else if (dup2(fd_new, fd_old) == -1) {
+		return err;
+	}
+
+	if (dup2(fd_old, fd_new) < 0) {
 		err = errno;
 		log_message(LOG_WARNING, "unable to duplicate %s and %d (%s)", rname, fd_old, strerror(err));
 	} else if (verbose > 1) {
 		log_message(LOG_DEBUG, "reopened using %s for idx = %d", rname, idx);
 	}
 
+	close(fd_old);
 	return err;
 }
 
