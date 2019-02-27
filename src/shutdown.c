@@ -204,11 +204,12 @@ static void try_clean_shutdown(int errorcode)
 	/* close_all(); */
 
 	/* if we will halt the system we should try to tell a sysadmin */
-	send_email(errorcode, NULL);
+	if (admin != NULL) {
+		run_func_as_child(60, send_email, errorcode, NULL);
+	}
 
-	close_logging();
-
-	safe_sleep(1);		/* make sure log is written */
+	open_logging(NULL, MSG_TO_STDERR); /* Without 'MSG_TO_SYSLOG' this closes syslog. */
+	safe_sleep(1);		/* make sure log is written (send_email now has its own wait). */
 
 	/* We cannot start shutdown, since init might not be able to fork. */
 	/* That would stop the reboot process. So we try rebooting the system */
