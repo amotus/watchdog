@@ -108,7 +108,7 @@ static int ignore_fs(const struct mntent *mnt)
 
 	const char *temp[] = {
 		"devfs", "proc", "sysfs", "ramfs",
-		"tmpfs", "devpts", "devtmpfs"
+		"tmpfs", "devpts", "devtmpfs", "tracefs"
 	};
 	const int num_temp = sizeof(temp) / sizeof(temp[0]);
 
