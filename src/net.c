@@ -33,8 +33,6 @@
 #include "watch_err.h"
 #include "gettime.h"
 
-static const long NSEC = 1000000000L;
-
 /*
  * in_cksum --
  *      Checksum routine for Internet Protocol family headers (C Version)
