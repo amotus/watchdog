@@ -169,8 +169,8 @@ static void mnt_off(void)
 		}
 	}
 
+	/* Close our file pointer. */
 	endmntent(fp);
-	fclose(fp);
 
 	/* we are careful to do this in reverse order of the mtab file */
 
