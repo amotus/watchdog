@@ -204,65 +204,11 @@ static void try_clean_shutdown(int errorcode)
 	/* close_all(); */
 
 	/* if we will halt the system we should try to tell a sysadmin */
-	if (admin != NULL) {
-		/* send mail to the system admin */
-		FILE *ph;
-		char exe[128];
-		struct stat buf;
-
-		/* Only can send an email if sendmail binary exists so check
-		 * that first, or else we will get a broken pipe in pclose.
-		 * We cannot let the shell check, because a non-existant or
-		 * non-executable sendmail binary means that the pipe is closed faster
-		 * than we can write to it. */
-		if ((stat(PATH_SENDMAIL, &buf) != 0) || ((buf.st_mode & S_IXUSR) == 0)) {
-			log_message(LOG_ERR, "%s does not exist or is not executable (errno = %d)", PATH_SENDMAIL, errno);
-		} else {
-			sprintf(exe, "%s -i %s", PATH_SENDMAIL, admin);
-			ph = popen(exe, "w");
-			if (ph == NULL) {
-				log_message(LOG_ERR, "cannot start %s (errno = %d)", PATH_SENDMAIL, errno);
-			} else {
-				char myname[MAXHOSTNAMELEN + 1];
-				struct hostent *hp;
-
-				/* get my name */
-				gethostname(myname, sizeof(myname));
-
-				fprintf(ph, "To: %s\n", admin);
-				if (ferror(ph) != 0) {
-					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
-				} else {
-					/* if possible use the full name including domain */
-					if ((hp = gethostbyname(myname)) != NULL)
-						fprintf(ph, "Subject: %s is going down!\n\n", hp->h_name);
-					else
-						fprintf(ph, "Subject: %s is going down!\n\n", myname);
-					if (ferror(ph) != 0) {
-						log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
-					} else {
-						if (errorcode == ETOOHOT)
-							fprintf(ph,
-								"Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
-						else
-							fprintf(ph,
-								"Message from watchdog:\nThe system will be rebooted because of error %d = '%s'\n", errorcode, wd_strerror(errorcode));
-						if (ferror(ph) != 0) {
-							log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
-						}
-					}
-				}
-				if (pclose(ph) == -1) {
-					log_message(LOG_ERR, "cannot finish mail (errno = %d)", errno);
-				}
-				/* finally give the system a little bit of time to deliver */
-			}
-		}
-	}
+	send_email(errorcode, NULL);
 
 	close_logging();
 
-	safe_sleep(10);		/* make sure log is written and mail is send */
+	safe_sleep(1);		/* make sure log is written */
 
 	/* We cannot start shutdown, since init might not be able to fork. */
 	/* That would stop the reboot process. So we try rebooting the system */

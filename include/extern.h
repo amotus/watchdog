@@ -211,4 +211,7 @@ void sigterm_handler(int arg);
 void set_reopen_dir(const char *dname);
 int reopen_std_files(int flags);
 
+/** send-email.c **/
+int send_email(int errorcode, void *ptr);
+
 #endif /*_EXTERN_H_*/
