@@ -284,11 +284,14 @@ static void add_test_binaries(const char *path)
 		return;
 
 	do {
-		ret = readdir_r(d, &dentry, &rdret);
-		if (ret)
-			break;
+		rdret = readdir(d);
 		if (rdret == NULL)
 			break;
+		/*
+		 * While readdir() should be thread safe, make a copy as soon
+		 * as practical just in case (see 'man readdir' page).
+		 */
+		dentry = (*rdret);
 
 		ret = snprintf(fname, sizeof(fname), "%s/%s", path, dentry.d_name);
 		if (ret >= sizeof(fname))
