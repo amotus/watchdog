@@ -125,8 +125,10 @@ static int repair(char *rbinary, int result, char *name, int version)
 			left--;
 		} while (left > 0);
 
-	} else
+	} else {
 		r_pid = waitpid(child_pid, &result, 0);
+	}
+
 	if (r_pid == 0) {
 		log_message(LOG_ERR, "repair child %d timed out", child_pid);
 		return (EREBOOT);
