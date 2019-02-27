@@ -100,6 +100,49 @@ static void panic(void)
 }
 
 /*
+ * Test for virtual file systems that we need not unmount.
+ */
+static int ignore_fs(const struct mntent *mnt)
+{
+	int ii;
+
+	const char *temp[] = {
+		"devfs", "proc", "sysfs", "ramfs",
+		"tmpfs", "devpts", "devtmpfs"
+	};
+	const int num_temp = sizeof(temp) / sizeof(temp[0]);
+
+	const char *ignore[] = {
+		"/run/", "/sys/", "/proc/", "/dev/"
+	};
+	const int num_ignore = sizeof(ignore) / sizeof(ignore[0]);
+
+	/*
+	 * Check for known temporary file systems
+	 */
+	for(ii = 0; ii < num_temp; ii++) {
+		const char *str = temp[ii];
+		if(!strcmp(mnt->mnt_type, str)) {
+			return -1;
+		}
+	}
+
+	/*
+	 * Check for known virtual file systems, these
+	 * often also feature sub-directories hence the
+	 * length-limited test for a path start.
+	 */
+	for(ii = 0; ii < num_ignore; ii++) {
+		const char *str = ignore[ii];
+		if(!strncmp(mnt->mnt_dir, str, strlen(str))) {
+			return -1;
+		}
+	}
+
+return 0;
+}
+
+/*
  * Unmount file ourselves, this code adapted from util-linux-2.17.2/login-utils/shutdown.c
  * However, they also try running the 'umount' binary first, as it might be smarter.
  */
@@ -132,21 +175,21 @@ static void mnt_off(void)
 		/* First check if swap */
 		if (!strcmp(mnt->mnt_type, MNTTYPE_SWAP)) {
 			if (swapoff(mnt->mnt_fsname) < 0)
-				perror(mnt->mnt_fsname);
+				log_message(LOG_ERR, "could not swap-off %s (%s)", mnt->mnt_fsname, strerror(errno));
 		} else {
 			/* quota only if mounted at boot time && filesytem=ext2 */
 			if (!hasmntopt(mnt, MNTOPT_NOAUTO) && !strcmp(mnt->mnt_type, MNTTYPE_EXT2)) {
 				/* group quota? */
 				if (hasmntopt(mnt, MNTOPT_GRPQUOTA)) {
 					if (quotactl(QCMD(Q_QUOTAOFF, GRPQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0) {
-						perror(mnt->mnt_fsname);
+						log_message(LOG_ERR, "could not stop group quota %s (%s)", mnt->mnt_fsname, strerror(errno));
 					}
 				}
 
 				/* user quota */
 				if (hasmntopt(mnt, MNTOPT_USRQUOTA)) {
 					if (quotactl(QCMD(Q_QUOTAOFF, USRQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0) {
-						perror(mnt->mnt_fsname);
+						log_message(LOG_ERR, "could not stop user quota %s (%s)", mnt->mnt_fsname, strerror(errno));
 					}
 				}
 			}
@@ -156,36 +199,47 @@ static void mnt_off(void)
 			 * filesystems is pointless and may cause error messages;
 			 * /dev can be a ramfs managed by udev.
 			 */
-			if (strcmp(mnt->mnt_type, "devfs") == 0 ||
-				strcmp(mnt->mnt_type, "proc")  == 0 ||
-				strcmp(mnt->mnt_type, "sysfs") == 0 ||
-				strcmp(mnt->mnt_type, "ramfs") == 0 ||
-				strcmp(mnt->mnt_type, "tmpfs") == 0 ||
-				strcmp(mnt->mnt_type, "devpts") == 0 ||
-				strcmp(mnt->mnt_type, "devtmpfs") == 0) {
-				continue;
+			if (ignore_fs(mnt)) {
+				log_message(LOG_DEBUG, "skip %s %s type %s", mnt->mnt_fsname, mnt->mnt_dir, mnt->mnt_type);
+			} else {
+				log_message(LOG_DEBUG, "listing %s %s type %s", mnt->mnt_fsname, mnt->mnt_dir, mnt->mnt_type);
+				mntlist[n++] = strdup(mnt->mnt_dir);
 			}
-		mntlist[n++] = strdup(mnt->mnt_dir);
 		}
 	}
 
 	/* Close our file pointer. */
 	endmntent(fp);
 
-	/* we are careful to do this in reverse order of the mtab file */
-
+	/*
+	 * We are careful to do this in reverse order of the mtab file.
+	 *
+	 * NOTE: We do not update the mount point list, so this is really
+	 * only good for a final shutdown!
+	 *
+	 */
 	for (i = n - 1; i >= 0; i--) {
 		char *filesys = mntlist[i];
 
-		log_message(LOG_DEBUG, "unmounting %s", filesys);
-		keep_alive();
+		/* Treat root file system as unmountable - make readonly instead. */
+		if(!strcmp(filesys, "/")) {
+			log_message(LOG_DEBUG, "remounting read-only %s", filesys);
+			keep_alive();
+
+			if(mount(filesys, filesys, "", MS_REMOUNT | MS_RDONLY, "") < 0) {
+				log_message(LOG_ERR, "could not remount %s (%s)", filesys, strerror(errno));
+			}
+		} else {
+			log_message(LOG_DEBUG, "unmounting %s", filesys);
+			keep_alive();
 
 #if defined( MNT_FORCE )
-		if (umount2(filesys, MNT_FORCE) < 0) {
+			if (umount2(filesys, MNT_FORCE) < 0) {
 #else
-		if (umount(filesys) < 0) {
+			if (umount(filesys) < 0) {
 #endif /*!MNT_FORCE*/
-			log_message(LOG_ERR, "could not unmount %s (%s)", filesys, strerror(errno));
+				log_message(LOG_ERR, "could not unmount %s (%s)", filesys, strerror(errno));
+			}
 		}
 	}
 }
