@@ -71,77 +71,35 @@ static int sync_system(int sync_it)
 /* execute repair binary */
 static int repair(char *rbinary, int result, char *name, int version)
 {
-	pid_t child_pid;
-	pid_t r_pid;
-	char parm[5];
+	char *arg[6];
+	char parm[22];
 	int ret;
-
-	/* no binary given, we have to reboot */
-	if (rbinary == NULL)
-		return (result);
 
 	sprintf(parm, "%d", result);
 
-	child_pid = fork();
-	if (!child_pid) {
-		/* Don't want the stdout and stderr of our repair program
-		 * to cause trouble, so make them go to their respective files */
-		int err = reopen_std_files(FLAG_REOPEN_STD_REPAIR);
-		/* If that failed, exit as bit problems likely (read-only file system?) */
-		if (err) {
-			exit(err);
-		}
-
-		/* now start binary */
-		if (version == 0) {
-			if (name == NULL)
-				execl(rbinary, rbinary, parm, NULL);
-			else
-				execl(rbinary, rbinary, parm, name, NULL);
-		} else {	/* if (version == 1) */
-
-			if (name == NULL)
-				execl(rbinary, rbinary, "repair", parm, NULL);
-			else
-				execl(rbinary, rbinary, "repair", parm, name, NULL);
-		}
-
-		/* execl() should only return in case of an error */
-		/* so we return the reboot code */
-		return (errno);
-	} else if (child_pid < 0) {	/* fork failed */
-		int err = errno;
-		log_message(LOG_ERR, "process fork failed with error = %d = '%s'", err, strerror(err));
-		return (EREBOOT);
-	}
-
-	if (repair_timeout > 0) {
-		int left = repair_timeout;
-		do {
-			sleep(1);
-			keep_alive();
-			r_pid = waitpid(child_pid, &result, WNOHANG);
-			if (r_pid)
-				break;
-			left--;
-		} while (left > 0);
-
+	if (version == 0) {
+		arg[0] = rbinary;	/* Use common repair binary with V0 test scripts, etc. */
+		arg[1] = rbinary;
+		arg[2] = parm;
+		arg[3] = name;	/* May be null, not a problem here. */
+		arg[4] = NULL;
+		arg[5] = NULL;
 	} else {
-		r_pid = waitpid(child_pid, &result, 0);
+		arg[0] = name;	/* With V1 the test binary is also the repair binary. */
+		arg[1] = name;
+		arg[2] = "repair";
+		arg[3] = parm;
+		arg[4] = name;
+		arg[5] = NULL;
 	}
 
-	if (r_pid == 0) {
-		log_message(LOG_ERR, "repair child %d timed out", child_pid);
-		return (EREBOOT);
-	} else if (r_pid != child_pid) {
-		int err = errno;
-		log_message(LOG_ERR, "child %d does not exist (errno = %d = '%s')", child_pid, err, strerror(err));
-		if (softboot)
-			return (err);
-	}
+	/* no binary given, we have to reboot */
+	if (arg[0] == NULL)
+		return (result);
+
+	ret = run_func_as_child(repair_timeout, exec_as_func, FLAG_REOPEN_STD_REPAIR, arg);
 
 	/* check result */
-	ret = WEXITSTATUS(result);
 	if (ret != 0) {
 		log_message(LOG_ERR, "repair binary %s returned %d = '%s'", rbinary, ret, wd_strerror(ret));
 	}

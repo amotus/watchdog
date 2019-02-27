@@ -205,6 +205,11 @@ const char *wd_strerror(int err);
 extern volatile sig_atomic_t _running;
 void sigterm_handler(int arg);
 
+/** run-as-child.c **/
+#define FLAG_CHILD_SYNC			0x01
+int exec_as_func(int flags, void *ptr);
+int run_func_as_child(int timeout, int (*funcptr)(int, void *), int code, void *ptr);
+
 /** reopenstd.c **/
 #define FLAG_REOPEN_STD_TEST	0x02
 #define FLAG_REOPEN_STD_REPAIR	0x04

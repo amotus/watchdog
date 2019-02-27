@@ -5,7 +5,8 @@ watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c gettime.c k
 			nfsmount_clnt.c nfsmount_xdr.c pidfile.c shutdown.c sundries.c \
 			temp.c test_binary.c umount.c version.c watchdog.c \
 			logmessage.c xmalloc.c heartbeat.c lock_mem.c daemon-pid.c configfile.c \
-			errorcodes.c read-conf.c sigterm.c reopenstd.c killall5.c send-email.c
+			errorcodes.c read-conf.c sigterm.c reopenstd.c killall5.c send-email.c \
+			run-as-child.c
 
 watchdog_CFLAGS = $(RPC_CFLAGS)
 watchdog_LDADD = $(RPC_LIBS)
