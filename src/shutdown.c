@@ -153,6 +153,22 @@ static void mnt_off(void)
 }
 
 /*
+ * Close all the device except for the watchdog.
+ */
+
+static void close_all_but_watchdog(void)
+{
+	close_loadcheck();
+	close_memcheck();
+	close_tempcheck();
+	close_heartbeat();
+	close_netcheck(target_list);
+
+	free_process();		/* What check_bin() was waiting to report. */
+	free_all_lists();	/* Memory used by read_config() */
+}
+
+/*
  * Kill everything, but depending on 'aflag' spare kernel/privileged
  * processes. Do this twice in case we have out-of-memory problems.
  *
@@ -248,8 +264,6 @@ static void save_urandom(void)
 /* part that tries to shut down the system cleanly */
 static void try_clean_shutdown(int errorcode)
 {
-	int i = 0;
-
 	/* soft-boot the system */
 	/* do not close open files here, they will be closed later anyway */
 	/* close_all(); */
@@ -268,13 +282,7 @@ static void try_clean_shutdown(int errorcode)
 	/* script either, so we do it all here. */
 
 	/* Close all files except the watchdog device. */
-	for (i = 0; i < 3; i++)
-		if (!isatty(i))
-			close(i);
-	for (i = 3; i < 20; i++)
-		if (i != get_watchdog_fd())
-			close(i);
-	close(255);
+	close_all_but_watchdog();
 
 	kill_everything_else(TRUE, sigterm_delay-1);
 
