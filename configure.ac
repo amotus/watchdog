@@ -19,6 +19,8 @@ AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_INSTALL
 
+AM_PROG_CC_C_O
+
 AC_PATH_PROG(PATH_SENDMAIL, sendmail, /usr/lib/sendmail, $PATH /usr/bin /usr/sbin /usr/etc /etc /usr/ucblib)
 if test -n "$PATH_SENDMAIL"; then
   AC_DEFINE_UNQUOTED(PATH_SENDMAIL, "$PATH_SENDMAIL", "path to sendmail binary")
