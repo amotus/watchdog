@@ -13,6 +13,7 @@
 
 #include "extern.h"
 #include "watch_err.h"
+#include "gettime.h"
 
 #define TEST_RUNNING	0
 #define TEST_COMPLETED	1
@@ -46,7 +47,7 @@ static int add_process(const char *name, pid_t pid)
 
 	snprintf(node->proc_name, sizeof(node->proc_name), "%s", name);
 	node->pid = pid;
-	node->time = time(NULL);
+	node->time = gettime();
 	node->ecode = 0;
 	node->is_done = FALSE;
 	node->next = process_head;
@@ -168,7 +169,7 @@ static void gather_children(void)
 static int check_timeouts(int timeout)
 {
 	struct process *current;
-	time_t now = time(NULL);
+	time_t now = gettime();
 
 	current = process_head;
 	while (current != NULL) {

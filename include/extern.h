@@ -18,6 +18,8 @@ struct pingmode {
 
 struct filemode {
 	int mtime;
+	time_t stat_mtime;
+	time_t stat_changed;
 };
 
 struct ifmode {

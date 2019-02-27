@@ -1,6 +1,6 @@
 sbin_PROGRAMS = watchdog wd_keepalive wd_identify
 
-watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c keep_alive.c \
+watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c gettime.c keep_alive.c \
 			load.c lomount.c memory.c mntent.c mount.c net.c nfsmount.c \
 			nfsmount_clnt.c nfsmount_xdr.c pidfile.c shutdown.c sundries.c \
 			temp.c test_binary.c umount.c version.c watchdog.c \
@@ -8,6 +8,9 @@ watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c keep_alive.
 			errorcodes.c read-conf.c sigterm.c reopenstd.c killall5.c
 watchdog_CFLAGS = $(RPC_CFLAGS)
 watchdog_LDADD = $(RPC_LIBS)
+
+# for glibc before 2.17 due to clock_gettime()
+watchdog_LDADD = -lrt
 
 wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmalloc.c \
 			configfile.c keep_alive.c read-conf.c sigterm.c
