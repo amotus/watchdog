@@ -40,7 +40,6 @@
 #include "extern.h"
 
 static int no_act = FALSE;
-char *filename_buf;
 
 static void usage(char *progname)
 {
@@ -84,26 +83,13 @@ static int repair(char *rbinary, int result, char *name, int version)
 
 	child_pid = fork();
 	if (!child_pid) {
-		int repair_stdout_fd, repair_stderr_fd;
-
-		/* Don't want the stdin and stdout of our repair program
-		 * to cause trouble.
-		 * So make stdout and stderr go to their respective files */
-		strcpy(filename_buf, logdir);
-		strcat(filename_buf, "/repair-bin.stdout");
-		repair_stdout_fd = open(filename_buf, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
-		if (repair_stdout_fd == -1)
-			exit(errno);
-		if (dup2(repair_stdout_fd, fileno(stdout)) == -1)
-			exit(errno);
-
-		strcpy(filename_buf, logdir);
-		strcat(filename_buf, "/repair-bin.stderr");
-		repair_stderr_fd = open(filename_buf, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
-		if (repair_stderr_fd == -1)
-			exit(errno);
-		if (dup2(repair_stderr_fd, fileno(stderr)) == -1)
-			exit(errno);
+		/* Don't want the stdout and stderr of our repair program
+		 * to cause trouble, so make them go to their respective files */
+		int err = reopen_std_files(FLAG_REOPEN_STD_REPAIR);
+		/* If that failed, exit as bit problems likely (read-only file system?) */
+		if (err) {
+			exit(err);
+		}
 
 		/* now start binary */
 		if (version == 0) {
@@ -471,11 +457,13 @@ int main(int argc, char *const argv[])
 		open_netcheck(target_list);
 	}
 
-	/* allocate some memory to store a filename, this is needed later on even
-	 * if the system runs out of memory */
-	filename_buf = (char *)xcalloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1, sizeof(char));
-
 	if (!foreground) {
+		/*
+		 * Allocate some memory to store a filename, this is needed later on even
+		 * if the system runs out of memory
+		 */
+		set_reopen_dir(logdir);
+
 		if (wd_daemon(0, 0)) {
 			fatal_error(EX_SYSERR, "failed to daemonize (%s)", strerror(errno));
 		}

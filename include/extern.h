@@ -112,9 +112,6 @@ extern char *repair_bin;
 extern int softboot;
 extern int verbose;
 
-/* From watchdog.c */
-extern char *filename_buf;
-
 /* From daemon-pid.c */
 extern pid_t daemon_pid;
 
@@ -200,5 +197,11 @@ const char *wd_strerror(int err);
 /** sigterm.c **/
 extern volatile sig_atomic_t _running;
 void sigterm_handler(int arg);
+
+/** reopenstd.c **/
+#define FLAG_REOPEN_STD_TEST	0x02
+#define FLAG_REOPEN_STD_REPAIR	0x04
+void set_reopen_dir(const char *dname);
+int reopen_std_files(int flags);
 
 #endif /*_EXTERN_H_*/
