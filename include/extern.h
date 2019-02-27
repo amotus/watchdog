@@ -111,6 +111,7 @@ extern char *repair_bin;
 
 extern int softboot;
 extern int verbose;
+extern int log_killed_PIDs;
 
 /* From daemon-pid.c */
 extern pid_t daemon_pid;
@@ -190,6 +191,10 @@ int wd_daemon(int nochdir, int noclose);
 
 /** configfile.c **/
 void read_config(char *configfile);
+
+/** killall5.c **/
+void killall5(int sig, int aflag);
+int kill_process_tree(pid_t pid, int sig);
 
 /** errorcodes.c **/
 const char *wd_strerror(int err);

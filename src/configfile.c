@@ -60,6 +60,7 @@ static void add_test_binaries(const char *path);
 #define RETRYTIMEOUT	"retry-timeout"
 #define REPAIRMAX		"repair-maximum"
 #define VERBOSE			"verbose"
+#define LOG_KILLED_PIDS	"log-killed-pids"
 
 #ifndef TESTBIN_PATH
 #define TESTBIN_PATH	NULL
@@ -112,6 +113,9 @@ char *repair_bin = NULL;
 /* Command line options also used globally. */
 int softboot = FALSE;
 int verbose = FALSE;
+
+/* Just for killall5.c */
+int log_killed_PIDs = 0;
 
 /* Simple table for yes/no enumerated options. */
 static const read_list_t Yes_No_list[] = {
@@ -233,6 +237,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
 		} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
 		} else if (READ_YESNO(VERBOSE, &verbose) == 0) {
+		} else if (READ_YESNO(LOG_KILLED_PIDS, &log_killed_PIDs) == 0) {
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}

@@ -174,7 +174,7 @@ static int check_timeouts(int timeout)
 	while (current != NULL) {
 		if (current->is_done == FALSE && (int)(now - current->time) > timeout) {
 			/* Process has timed-out, kill it and report this. */
-			kill(current->pid, SIGKILL);
+			kill_process_tree(current->pid, SIGKILL);
 			current->is_done = TRUE;
 			current->ecode = ETOOLONG;
 			log_message(LOG_ERR, "test-binary %s exceeded time limit %d", current->proc_name, timeout);

@@ -57,13 +57,6 @@ extern int mount_one(char *, char *, char *, char *, int, int);
 static struct mntent rootfs;
 #endif
 
-/* Info about a process. */
-typedef struct _proc_ {
-	pid_t pid;		/* Process ID.                    */
-	int sid;		/* Session ID.                    */
-	struct _proc_ *next;	/* Pointer to next struct.        */
-} PROC;
-
 /* close the device and check for error */
 static void close_all(void)
 {
@@ -159,92 +152,45 @@ static void mnt_off(void)
 	endmntent(fp);
 }
 
-/* Parts of the following two functions are taken from Miquel van */
-/* Smoorenburg's killall5 program. */
+/*
+ * Kill everything, but depending on 'aflag' spare kernel/privileged
+ * processes. Do this twice in case we have out-of-memory problems.
+ *
+ * The value of 'stime' is the delay from 2nd SIGTERM to SIGKILL but
+ * the SIGKILL is only used when 'aflag' is true as things really bad then!
+ */
 
-static PROC *plist;
-
-/* get a list of all processes */
-static int readproc(void)
+static void kill_everything_else(int aflag, int stime)
 {
-	DIR *dir;
-	struct dirent *d;
-	pid_t act_pid;
-	PROC *p;
+	int ii;
 
-	/* Open the /proc directory. */
-	if ((dir = opendir("/proc")) == NULL) {
-		log_message(LOG_ERR, "cannot opendir /proc");
-		return (-1);
-	}
-
-	/* Don't worry about free'ing the list first, we are going down anyway. */
-	plist = NULL;
-
-	/* Walk through the directory. */
-	while ((d = readdir(dir)) != NULL) {
-
-		/* See if this is a process */
-		if ((act_pid = atoi(d->d_name)) == 0)
-			continue;
-
-		/*
-		 * Get a PROC struct. If this fails, which is likely if we have an
-		 * out-of-memory error, we return gracefully with what we have managed
-		 * so hopefully a 2nd call after killing some processes will give us more.
-		 */
-		if ((p = (PROC *) calloc(1, sizeof(PROC))) == NULL) {
-			log_message(LOG_ERR, "out of memory");
-			closedir(dir);
-			return (-1);
+	/* Ignore all signals (except children, so run_func_as_child() works as expected). */
+	for (ii = 1; ii < NSIG; ii++) {
+		if (ii != SIGCHLD) {
+			signal(ii, SIG_IGN);
 		}
-		p->sid = getsid(act_pid);
-		p->pid = act_pid;
-
-		/* Link it into the list. */
-		p->next = plist;
-		plist = p;
 	}
-	closedir(dir);
 
-	/* Done. */
-	return (0);
-}
+	/* Stop init; it is insensitive to the signals sent by the kernel. */
+	kill(1, SIGTSTP);
 
-static void killall5(int sig)
-{
-	PROC *p;
-	int sid = -1;
+	/* Try to terminate processes the 'nice' way. */
+	killall5(SIGTERM, aflag);
+	safe_sleep(1);
+	/* Do this twice in case we have out-of-memory problems. */
+	killall5(SIGTERM, aflag);
 
-	/*
-	 *    Ignoring SIGKILL and SIGSTOP do not make sense, but
-	 *    someday kill(-1, sig) might kill ourself if we don't
-	 *    do this. This certainly is a valid concern for SIGTERM-
-	 *    Linux 2.1 might send the calling process the signal too.
-	 */
+	/* Now wait for most processes to exit as intended. */
+	safe_sleep(stime);
 
-	/* Since we ignore all signals, we don't have to worry here. MM */
-	/* Now stop all processes. */
-	suspend_logging();
-	kill(-1, SIGSTOP);
-
-	/* Find out our own 'sid'. */
-	if (readproc() == 0) {
-		for (p = plist; p; p = p->next)
-			if (p->pid == daemon_pid) {
-				sid = p->sid;
-				break;
-			}
-		/* Now kill all processes except our session. */
-		for (p = plist; p; p = p->next)
-			if (p->pid != daemon_pid &&	/* Skip our process */
-				p->sid != sid && 	/* Skip our session */
-				p->sid != 0) 		/* Skip any kernel process. */
-					kill(p->pid, sig);
+	if (aflag) {
+		/* In case that fails, send them the non-ignorable kill signal. */
+		killall5(SIGKILL, aflag);
+		keep_alive();
+		/* Out-of-memory safeguard again. */
+		killall5(SIGKILL, aflag);
+		keep_alive();
 	}
-	/* And let them continue. */
-	kill(-1, SIGCONT);
-	resume_logging();
 }
 
 /* part that tries to shut down the system cleanly */
@@ -332,24 +278,7 @@ static void try_clean_shutdown(int errorcode)
 			close(i);
 	close(255);
 
-	/* Ignore all signals. */
-	for (i = 1; i < NSIG; i++)
-		signal(i, SIG_IGN);
-
-	/* Stop init; it is insensitive to the signals sent by the kernel. */
-	kill(1, SIGTSTP);
-
-	/* Kill all other processes. */
-	killall5(SIGTERM);
-	safe_sleep(1);
-	/* Do this twice in case we have out-of-memory problems. */
-	killall5(SIGTERM);
-	safe_sleep(sigterm_delay-1);
-	killall5(SIGKILL);
-	keep_alive();
-	/* Out-of-memory safeguard again. */
-	killall5(SIGKILL);
-	keep_alive();
+	kill_everything_else(TRUE, sigterm_delay-1);
 
 	/* Remove our PID file, as nothing should be capable of starting a 2nd daemon now. */
 	remove_pid_file();
