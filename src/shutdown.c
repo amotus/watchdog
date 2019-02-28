@@ -108,7 +108,8 @@ static int ignore_fs(const struct mntent *mnt)
 
 	const char *temp[] = {
 		"devfs", "proc", "sysfs", "ramfs",
-		"tmpfs", "devpts", "devtmpfs", "tracefs"
+		"tmpfs", "devpts", "devtmpfs", "tracefs",
+		"squashfs"
 	};
 	const int num_temp = ARRAY_SIZE(temp);
 
