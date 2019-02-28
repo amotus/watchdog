@@ -493,7 +493,7 @@ int main(int argc, char *const argv[])
 		for (act = file_list; act != NULL; act = act->next)
 			do_check(check_file_stat_safe(act), repair_bin, act);
 
-		/* in pidmode kill -0 processes */
+		/* in pidmode use "kill -0" to ping processes ID */
 		for (act = pidfile_list; act != NULL; act = act->next)
 			do_check(check_pidfile(act), repair_bin, act);
 
@@ -533,7 +533,7 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	/* Terminat closes all lists. */
+	/* The terminate() function closes all lists. */
 	terminate(EXIT_SUCCESS);
 	/* not reached */
 	return (EXIT_SUCCESS);
