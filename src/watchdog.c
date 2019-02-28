@@ -108,7 +108,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 	return (ret);
 }
 
-static void wd_action(int result, char *rbinary, struct list *act)
+static int attempt_repair(int result, char *rbinary, struct list *act)
 {
 	int version = 0;
 	char *name = NULL;
@@ -127,6 +127,63 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		rbinary = name;
 	}
 
+	/* Check for re-try options. */
+	if (act != NULL && retry_timeout > 0) {
+		/* timer possible and used to allow re-try */
+		time_t now = gettime();
+		timeout = FALSE;
+
+		if (act->last_time == 0) {
+			/* First offence, record time. */
+			act->last_time = now;
+		} else {
+			/* timer running */
+			int tused = (int)(now - act->last_time);
+
+			if (tused > retry_timeout) {
+				log_message(LOG_WARNING, "Retry timed-out at %d seconds for %s", tused,
+					act->name);
+				timeout = TRUE;
+			} else {
+				if (verbose)
+					log_message(LOG_DEBUG, "Retry at %d seconds for %s", tused, act->name);
+			}
+		}
+	}
+
+	/* Timed out, or not re-try in use? */
+	if (timeout) {
+		int try_repair = TRUE;
+		/* check for too many failed repair attempts */
+		if (act != NULL && repair_max > 0) {
+			if (++act->repair_count > repair_max) {
+				try_repair = FALSE;
+				log_message(LOG_WARNING, "Repair count exceeded (%d for %s)",
+					act->repair_count, act->name);
+			} else {
+				/* going to repair, reset re-try timer so same period for next try */
+				act->last_time = 0;
+				if (verbose) {
+					log_message(LOG_DEBUG, "Repair attempt %d for %s",
+						act->repair_count, act->name);
+				}
+			}
+		}
+
+		if (try_repair) {
+			result = repair(rbinary, result, name, version);
+		}
+	} else {
+		/* Not yet timed out, so treat as "no error" for now. */
+		result = ENOERR;
+	}
+
+return result;
+}
+
+static void wd_action(int result, char *rbinary, struct list *act)
+{
+
 	/* Decide on repair or return based on error code. */
 	switch (result) {
 	case ENOERR:
@@ -135,6 +192,8 @@ static void wd_action(int result, char *rbinary, struct list *act)
 			act->last_time = 0;
 			act->repair_count = 0;
 		}
+		return;
+
 	case EDONTKNOW:
 		/* Don't know, keep on working */
 		return;
@@ -146,54 +205,8 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		break;
 
 	default:
-		/* error that might be repairable */
-		if (act != NULL && retry_timeout > 0) {
-			/* timer possible and used to allow re-try */
-			time_t now = gettime();
-			timeout = FALSE;
-
-			if (act->last_time == 0) {
-				/* First offence, record time. */
-				act->last_time = now;
-			} else {
-				/* timer running */
-				int tused = (int)(now - act->last_time);
-
-				if (tused > retry_timeout) {
-					log_message(LOG_WARNING, "Retry timed-out at %d seconds for %s", tused,
-						act->name);
-					timeout = TRUE;
-				} else {
-					if (verbose)
-						log_message(LOG_DEBUG, "Retry at %d seconds for %s", tused, act->name);
-				}
-			}
-		}
-
-		if (timeout) {
-			int try_repair = TRUE;
-			/* check for too many failed repair attempts */
-			if (act != NULL && repair_max > 0) {
-				if (++act->repair_count > repair_max) {
-					try_repair = FALSE;
-					log_message(LOG_WARNING, "Repair count exceeded (%d for %s)",
-						act->repair_count, act->name);
-				} else {
-					/* going to repair, reset re-try timer so same period for next try */
-					act->last_time = 0;
-					if (verbose) {
-						log_message(LOG_DEBUG, "Repair attempt %d for %s",
-							act->repair_count, act->name);
-					}
-				}
-			}
-
-			if (try_repair) {
-				result = repair(rbinary, result, name, version);
-			}
-		} else {
-			result = ENOERR;
-		}
+		/* Error that might be repairable */
+		result = attempt_repair(result, rbinary, act);
 		break;
 	}
 
