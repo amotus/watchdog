@@ -533,7 +533,7 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	free_all_lists();
+	/* Terminat closes all lists. */
 	terminate(EXIT_SUCCESS);
 	/* not reached */
 	return (EXIT_SUCCESS);
