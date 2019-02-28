@@ -20,6 +20,12 @@
 #include <string.h>
 #include <ctype.h> /* for isdigit() */
 
+#define USE_MMAP 1 /* Set to 1 to memory-map the lists so forked process share variables. */
+
+#if USE_MMAP
+#include <sys/mman.h>
+#endif /*USE_MMAP*/
+
 #include "extern.h"
 #include "read-conf.h"
 
@@ -268,8 +274,26 @@ void add_list(struct list **list, const char *name, int version)
 	if (list == NULL || name == NULL)
 		return;
 
+#if USE_MMAP
+	/* Use of mapped memory allows child (fork) to share changes with parent. */
+	new = (struct list *)mmap(NULL, sizeof(struct list),
+							PROT_READ | PROT_WRITE,
+							MAP_SHARED | MAP_ANONYMOUS,
+							-1, 0);
+
+	if(new == NULL) {
+		int err = errno;
+		log_message(LOG_ERR, "mmap() failed (%d = %s)", err, strerror(err));
+		return;
+	}
+
+	/* Zero memory just in case. */
+	memset(new, 0, sizeof(struct list));
+#else
 	/* Use xcalloc() to allocate and *zero* a block of memory. */
 	new = (struct list *)xcalloc(1, sizeof(struct list));
+#endif /*USE_MMAP*/
+
 	/* Make a copy of 'name' in case it changes elsewhere. */
 	new->name = xstrdup(name);
 	new->version = version;
@@ -299,7 +323,17 @@ void free_list(struct list **list)
 			if (act->name != NULL) {
 				free(act->name);
 			}
+
+#if USE_MMAP
+			/* If we mapped it, we should un-map it for exit. */
+			if(munmap(act, sizeof(struct list)) < 0) {
+				int err = errno;
+				log_message(LOG_ERR, "munmap() failed (%d = %s)", err, strerror(err));
+			}
+#else
 			free(act);
+#endif /*USE_MMAP*/
+
 			act = new;
 		}
 		*list = NULL; /* Mark as done. */

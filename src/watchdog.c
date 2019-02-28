@@ -491,7 +491,7 @@ int main(int argc, char *const argv[])
 
 		/* in filemode stat file */
 		for (act = file_list; act != NULL; act = act->next)
-			do_check(check_file_stat(act), repair_bin, act);
+			do_check(check_file_stat_safe(act), repair_bin, act);
 
 		/* in pidmode kill -0 processes */
 		for (act = pidfile_list; act != NULL; act = act->next)
