@@ -182,10 +182,11 @@ Set the time on shut down between first sending SIGTERM to all processes, and th
 sending SIGKILL. Default is 5 seconds which is generally enough, but systems with
 large databases or virtual machines might need longer.
 .TP
-verbose = <yes|no>
+verbose = <level>
 This overrides the command line \-\-verbose option. Generally the verbose mode is
 only enabled for debugging as it creates a lot of syslog chatter, so use this option
-with consideration.
+with consideration. Zero is "normal" operation (quiet), while 1 is typically used
+for debugging. Values of 2 or more usually generate far too many messages.
 .TP
 heartbeat-file = <filename>
 For debugging this allows a rolling set of status values to be kept on disk

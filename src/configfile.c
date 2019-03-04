@@ -116,7 +116,7 @@ char *repair_bin = NULL;
 
 /* Command line options also used globally. */
 int softboot = FALSE;
-int verbose = FALSE;
+int verbose = 0;
 
 /* Just for killall5.c */
 int log_killed_PIDs = 0;
@@ -243,7 +243,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
 		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
 		} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
-		} else if (READ_YESNO(VERBOSE, &verbose) == 0) {
+		} else if (READ_INT(VERBOSE, &verbose) == 0) {
 		} else if (READ_YESNO(LOG_KILLED_PIDS, &log_killed_PIDs) == 0) {
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
