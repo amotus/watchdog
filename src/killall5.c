@@ -90,6 +90,8 @@ static void close_dmp(void)
 		fprintf(dmp_fp, "Done at %s", ctime(&tnow));
 		if (fclose(dmp_fp) < 0) {
 			log_message(LOG_ERR, "Error closing dump file (%s)", strerror(errno));
+		} else {
+			log_message(LOG_DEBUG, "Closed dump file");
 		}
 		dmp_fp = NULL;
 	}
