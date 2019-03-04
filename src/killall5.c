@@ -382,8 +382,7 @@ void killall5(int sig, int aflag)
 				if (aflag || (p->sid != sid && is_mortal(p->pid))) {
 					kill(p->pid, sig);
 					kcount++;
-				}
-				else {
+				} else {
 					if (verbose > 1) {
 						log_message(LOG_DEBUG, "skipping PID=%d SID=%d", p->pid, p->sid);
 					}
