@@ -31,8 +31,6 @@ static int read_proc_line(pid_t pid, const char *opt, size_t bsize, char *buf);
 
 #define MORTAL_GID (110) /* A value of GID typically above rsyslog's GID. */
 
-#define VERY_VERBOSE 0	/* Debug option, normally zero. */
-
 #define DEBUG_DUMP 	1	/* Set to 1 for verbose mode dumping of process lists. */
 
 #if DEBUG_DUMP
@@ -385,13 +383,11 @@ void killall5(int sig, int aflag)
 					kill(p->pid, sig);
 					kcount++;
 				}
-#if VERY_VERBOSE
 				else {
-					if (verbose) {
+					if (verbose > 1) {
 						log_message(LOG_DEBUG, "skipping PID=%d SID=%d", p->pid, p->sid);
 					}
 				}
-#endif /*VERY_VERBOSE*/
 			}
 		}
 	} else {
@@ -415,11 +411,10 @@ void killall5(int sig, int aflag)
 	free_plist();
 	resume_logging();
 
-#if VERY_VERBOSE
-	if (verbose) {
+	if (verbose > 1) {
 		log_message(LOG_DEBUG, "sent signal %2d to %d of %d processes", sig, kcount, pcount);
 	}
-#endif /*VERY_VERBOSE*/
+
 }
 
 /*
@@ -518,11 +513,9 @@ int kill_process_tree(pid_t pid, int sig)
 
 	free_plist();
 
-#if VERY_VERBOSE
-	if (verbose) {
+	if (verbose > 1) {
 		log_message(LOG_DEBUG, "sent signal %2d to %d of %d processes", sig, kcount, pcount);
 	}
-#endif /*VERY_VERBOSE*/
 
 	return kcount;
 }
