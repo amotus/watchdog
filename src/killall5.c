@@ -90,6 +90,14 @@ static void close_dmp(void)
 			log_message(LOG_ERR, "Error closing dump file (%s)", strerror(errno));
 		} else {
 			log_message(LOG_DEBUG, "Closed dump file");
+			/*
+			 * Sync file system so record is safe.
+			 * OK, this changes the shutdown behaviour/timing
+			 * a bit compared to non-verbose operations, but if
+			 * the timer kicks in before any other sync() is run
+			 * you simply have no record at all!
+			 */
+			sync();
 		}
 		dmp_fp = NULL;
 	}
