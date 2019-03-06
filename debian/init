@@ -54,7 +54,7 @@ case "$1" in
 	# make sure that wd_keepalive is stopped
 	log_begin_msg "Stopping watchdog keepalive daemon..."
         start-stop-daemon --stop --quiet --oknodo --retry $STOP_RETRY_SCHEDULE \
-            --pidfile /var/run/$KEEPALIVE_NAME.pid
+            --pidfile /var/run/$KEEPALIVE_NAME.pid --exec $KEEPALIVE_DAEMON
         log_end_msg $?
 
 	# also remove the sendsigs omit file
@@ -74,7 +74,7 @@ case "$1" in
     then
 	log_begin_msg "Stopping watchdog daemon..."
 	start-stop-daemon --stop --quiet --retry $STOP_RETRY_SCHEDULE \
-	    --pidfile /var/run/$NAME.pid
+	    --pidfile /var/run/$NAME.pid --exec $DAEMON
 	log_end_msg $?
 	if [ $run_wd_keepalive = 1 ]
 	then
@@ -99,7 +99,7 @@ case "$1" in
     log_daemon_msg "Restarting $NAME"
     log_progress_msg "Stopping $NAME daemon..."
     start-stop-daemon --stop --pidfile /var/run/$NAME.pid --quiet \
-	--retry $STOP_RETRY_SCHEDULE || log_end_msg $?
+	--retry $STOP_RETRY_SCHEDULE --exec $DAEMON || log_end_msg $?
     log_progress_msg "Starting $NAME daemon..."
     start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
 	--exec $DAEMON -- $watchdog_options
