@@ -239,7 +239,7 @@ static void print_info(int sync_it, int force)
 {
 	struct list *act;
 
-	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s load=%d,%d,%d soft=%s",
+	log_message(LOG_INFO, " int=%ds realtime=%s sync=%s load=%d,%d,%d soft=%s",
 		    tint,
 		    realtime ? "yes" : "no",
 		    sync_it ? "yes" : "no",
@@ -247,69 +247,69 @@ static void print_info(int sync_it, int force)
 		    softboot ? "yes" : "no");
 
 	if (minpages == 0 && minalloc == 0)
-		log_message(LOG_INFO, "memory not checked");
+		log_message(LOG_INFO, " memory not checked");
 	else
-		log_message(LOG_INFO, "memory: minimum pages = %d free, %d allocatable (%d byte pages)",
+		log_message(LOG_INFO, " memory: minimum pages = %d free, %d allocatable (%d byte pages)",
 			minpages, minalloc, EXEC_PAGESIZE);
 
 	if (target_list == NULL)
-		log_message(LOG_INFO, "ping: no machine to check");
+		log_message(LOG_INFO, " ping: no machine to check");
 	else
 		for (act = target_list; act != NULL; act = act->next)
 			log_message(LOG_INFO, "ping: %s", act->name);
 
 	if (file_list == NULL)
-		log_message(LOG_INFO, "file: no file to check");
+		log_message(LOG_INFO, " file: no file to check");
 	else
 		for (act = file_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
+			log_message(LOG_INFO, " file: %s:%d", act->name, act->parameter.file.mtime);
 
 	if (pidfile_list == NULL)
-		log_message(LOG_INFO, "pidfile: no server process to check");
+		log_message(LOG_INFO, " pidfile: no server process to check");
 	else
 		for (act = pidfile_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "pidfile: %s", act->name);
+			log_message(LOG_INFO, " pidfile: %s", act->name);
 
 	if (iface_list == NULL)
-		log_message(LOG_INFO, "interface: no interface to check");
+		log_message(LOG_INFO, " interface: no interface to check");
 	else
 		for (act = iface_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "interface: %s", act->name);
+			log_message(LOG_INFO, " interface: %s", act->name);
 
 	if (temp_list == NULL)
-		log_message(LOG_INFO, "temperature: no sensors to check");
+		log_message(LOG_INFO, " temperature: no sensors to check");
 	else {
-		log_message(LOG_INFO, "temperature: maximum = %d", maxtemp);
+		log_message(LOG_INFO, " temperature: maximum = %d", maxtemp);
 		for (act = temp_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "temperature: %s", act->name);
+			log_message(LOG_INFO, " temperature: %s", act->name);
 	}
 
 	if (tr_bin_list == NULL)
-		log_message(LOG_INFO, "no test binary files");
+		log_message(LOG_INFO, " no test binary files");
 	else {
-		log_message(LOG_INFO, "test binary time-out = %d", test_timeout);
+		log_message(LOG_INFO, " test binary time-out = %d", test_timeout);
 		for (act = tr_bin_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "%s: %s",
+			log_message(LOG_INFO, " %s: %s",
 				act->version == 0 ? "test binary V0" : "test/repair V1",
 				act->name);
 	}
 
 	if (repair_bin == NULL)
-		log_message(LOG_INFO, "no repair binary files");
+		log_message(LOG_INFO, " no repair binary files");
 	else {
-		log_message(LOG_INFO, "repair binary: time-out = %d", repair_timeout);
-		log_message(LOG_INFO, "repair binary: program = %s", repair_bin);
+		log_message(LOG_INFO, " repair binary: time-out = %d", repair_timeout);
+		log_message(LOG_INFO, " repair binary: program = %s", repair_bin);
 	}
 
-	log_message(LOG_INFO, "error retry time-out = %d seconds", retry_timeout);
+	log_message(LOG_INFO, " error retry time-out = %d seconds", retry_timeout);
 
 	if (repair_max > 0) {
-		log_message(LOG_INFO, "repair attempts = %d", repair_max);
+		log_message(LOG_INFO, " repair attempts = %d", repair_max);
 	} else {
-		log_message(LOG_INFO, "repair attempts = unlimited");
+		log_message(LOG_INFO, " repair attempts = unlimited");
 	}
 
-	log_message(LOG_INFO, "alive=%s heartbeat=%s to=%s no_act=%s force=%s",
+	log_message(LOG_INFO, " alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		    (devname == NULL) ? "[none]" : devname,
 		    (heartbeat == NULL) ? "[none]" : heartbeat,
 		    (admin == NULL) ? "[none]" : admin,
