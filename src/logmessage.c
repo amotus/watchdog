@@ -49,8 +49,9 @@ int open_logging(const char *name, int flags)
 {
 	int rv = 0;
 
-	if (name != NULL)
+	if (name != NULL) {
 		strncpy(progname, name, sizeof(progname) - 1);
+	}
 
 	err_count = 0;
 	using_terminal = (flags & MSG_TO_STDERR);
