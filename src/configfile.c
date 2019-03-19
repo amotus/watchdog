@@ -229,48 +229,48 @@ static void parse_arg_val(char *arg, char *val, int linecount)
 {
 	int itmp = 0;
 
-		/* Search for a match. Note that the read_*_func() calls deal with a zero-length 'val' as needed. */
-		if (READ_LIST(FILENAME, &file_list) == 0) {
-		} else if (READ_INT(CHANGE, &itmp) == 0) {
-			set_file_list_change(itmp, linecount);
-		} else if (READ_LIST(SERVERPIDFILE, &pidfile_list) == 0) {
-		} else if (READ_INT(PINGCOUNT, &pingcount) == 0) {
-		} else if (READ_LIST(PING, &target_list) == 0) {
-		} else if (READ_LIST(INTERFACE, &iface_list) == 0) {
-		} else if (READ_YESNO(REALTIME, &realtime) == 0) {
-		} else if (READ_INT(PRIORITY, &schedprio) == 0) {
-		} else if (READ_STRING(REPAIRBIN, &repair_bin) == 0) {
-		} else if (READ_INT(REPAIRTIMEOUT, &repair_timeout) == 0) {
-		} else if (READ_LIST(TESTBIN, &tr_bin_list) == 0) {
-		} else if (READ_INT(TESTTIMEOUT, &test_timeout) == 0) {
-		} else if (READ_STRING(HEARTBEAT, &heartbeat) == 0) {
-		} else if (READ_INT(HBSTAMPS, &hbstamps) == 0) {
-		} else if (READ_STRING(ADMIN, &admin) == 0) {
-		} else if (READ_INT(INTERVAL, &tint) == 0) {
-		} else if (READ_INT(LOGTICK, &logtick) == 0) {
-			ticker = logtick;
-		} else if (READ_STRING(DEVICE, &devname) == 0) {
-		} else if (READ_YN_AUTO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
-		} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
-		} else if (READ_LIST(TEMP, &temp_list) == 0) {
-		} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {
-		} else if (READ_INT(MAXLOAD1, &maxload1) == 0) {
-		} else if (READ_INT(MAXLOAD5, &maxload5) == 0) {
-		} else if (READ_INT(MAXLOAD15, &maxload15) == 0) {
-		} else if (READ_INT(MINMEM, &minpages) == 0) {
-		} else if (READ_INT(ALLOCMEM, &minalloc) == 0) {
-		} else if (READ_STRING(LOGDIR, &logdir) == 0) {
-		} else if (READ_STRING(TESTDIR, &test_dir) == 0) {
-		} else if (READ_YESNO(SOFTBOOT, &softboot) == 0) {
-		} else if (READ_YESNO(TEMPPOWEROFF, &temp_poweroff) == 0) {
-		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
-		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
-		} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
-		} else if (READ_INT(VERBOSE, &verbose) == 0) {
-		} else if (READ_YESNO(LOG_KILLED_PIDS, &log_killed_PIDs) == 0) {
-		} else {
-			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
-		}
+	/* Search for a match. Note that the read_*_func() calls deal with a zero-length 'val' as needed. */
+	if (READ_LIST(FILENAME, &file_list) == 0) {
+	} else if (READ_INT(CHANGE, &itmp) == 0) {
+		set_file_list_change(itmp, linecount);
+	} else if (READ_LIST(SERVERPIDFILE, &pidfile_list) == 0) {
+	} else if (READ_INT(PINGCOUNT, &pingcount) == 0) {
+	} else if (READ_LIST(PING, &target_list) == 0) {
+	} else if (READ_LIST(INTERFACE, &iface_list) == 0) {
+	} else if (READ_YESNO(REALTIME, &realtime) == 0) {
+	} else if (READ_INT(PRIORITY, &schedprio) == 0) {
+	} else if (READ_STRING(REPAIRBIN, &repair_bin) == 0) {
+	} else if (READ_INT(REPAIRTIMEOUT, &repair_timeout) == 0) {
+	} else if (READ_LIST(TESTBIN, &tr_bin_list) == 0) {
+	} else if (READ_INT(TESTTIMEOUT, &test_timeout) == 0) {
+	} else if (READ_STRING(HEARTBEAT, &heartbeat) == 0) {
+	} else if (READ_INT(HBSTAMPS, &hbstamps) == 0) {
+	} else if (READ_STRING(ADMIN, &admin) == 0) {
+	} else if (READ_INT(INTERVAL, &tint) == 0) {
+	} else if (READ_INT(LOGTICK, &logtick) == 0) {
+		ticker = logtick;
+	} else if (READ_STRING(DEVICE, &devname) == 0) {
+	} else if (READ_YN_AUTO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
+	} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
+	} else if (READ_LIST(TEMP, &temp_list) == 0) {
+	} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {
+	} else if (READ_INT(MAXLOAD1, &maxload1) == 0) {
+	} else if (READ_INT(MAXLOAD5, &maxload5) == 0) {
+	} else if (READ_INT(MAXLOAD15, &maxload15) == 0) {
+	} else if (READ_INT(MINMEM, &minpages) == 0) {
+	} else if (READ_INT(ALLOCMEM, &minalloc) == 0) {
+	} else if (READ_STRING(LOGDIR, &logdir) == 0) {
+	} else if (READ_STRING(TESTDIR, &test_dir) == 0) {
+	} else if (READ_YESNO(SOFTBOOT, &softboot) == 0) {
+	} else if (READ_YESNO(TEMPPOWEROFF, &temp_poweroff) == 0) {
+	} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
+	} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
+	} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
+	} else if (READ_INT(VERBOSE, &verbose) == 0) {
+	} else if (READ_YESNO(LOG_KILLED_PIDS, &log_killed_PIDs) == 0) {
+	} else {
+		log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
+	}
 }
 
 /*
