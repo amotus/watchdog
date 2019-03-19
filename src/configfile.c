@@ -24,6 +24,7 @@
 #include "read-conf.h"
 
 static void add_test_binaries(const char *path);
+static void set_file_list_change(int change, int linecount);
 
 #define ADMIN			"admin"
 #define CHANGE			"change"
@@ -195,21 +196,7 @@ void read_config(char *configfile)
 		/* Search for a match. Note that the read_*_func() calls deal with a zero-length 'val' as needed. */
 		if (READ_LIST(FILENAME, &file_list) == 0) {
 		} else if (READ_INT(CHANGE, &itmp) == 0) {
-			struct list *ptr;
-			if (!file_list) {	/* no file entered yet */
-				log_message(LOG_WARNING,
-					"Warning: file change interval, but no file (yet) at line %d of config file", linecount);
-			} else {
-				for (ptr = file_list; ptr->next != NULL; ptr = ptr->next) {
-					/* loop to find end of list. */
-				}
-
-				if (ptr->parameter.file.mtime != 0)
-					log_message(LOG_WARNING,
-						"Warning: duplicate change interval at line %d of config file (ignoring previous)", linecount);
-
-				ptr->parameter.file.mtime = itmp;
-			}
+			set_file_list_change(itmp, linecount);
 		} else if (READ_LIST(SERVERPIDFILE, &pidfile_list) == 0) {
 		} else if (READ_INT(PINGCOUNT, &pingcount) == 0) {
 		} else if (READ_LIST(PING, &target_list) == 0) {
@@ -270,6 +257,34 @@ void read_config(char *configfile)
 	if (maxload1 && !maxload15)
 		maxload15 = maxload1 / 2;
 
+}
+
+/*
+ * Find the most recent file test and set the 'mtime' value for change in
+ * modification time testing.
+ */
+
+static void set_file_list_change(int change, int linecount)
+{
+	struct list *ptr;
+
+	if (!file_list) {
+		/* no file entered yet, report this anomaly */
+		log_message(LOG_WARNING,
+			"Warning: file change interval, but no file (yet) at line %d of config file", linecount);
+	} else {
+		/* we have a file list */
+		for (ptr = file_list; ptr->next != NULL; ptr = ptr->next) {
+			/* loop to find end of list. */
+		}
+
+		if (ptr->parameter.file.mtime != 0) {
+			log_message(LOG_WARNING,
+				"Warning: duplicate change interval at line %d of config file (ignoring previous)", linecount);
+		}
+
+		ptr->parameter.file.mtime = change;
+	}
 }
 
 /*
