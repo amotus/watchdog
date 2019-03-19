@@ -158,24 +158,4 @@ AC_ARG_WITH(randomseed,
   AC_MSG_RESULT("/var/run/random-seed")
 ])
 
-# Check for an RPC library, starting with libtirpc.
-PKG_CHECK_MODULES([RPC], [libtirpc], [], [
-    # If we don't have libtirpc, then we must have <rpc/rpc.h> and
-    # some library to link to in libdir.
-    RPC_CFLAGS=""
-    AC_CHECK_HEADER([rpc/rpc.h],[],[
-        AC_MSG_ERROR([XDR header files are required])
-    ],
-    [#include <rpc/types.h>])
-
-    old_LIBS="$LIBS"
-    LIBS=""
-    AC_SEARCH_LIBS([xdrmem_create],[rpc xdr nsl])
-    RPC_LIBS="$LIBS"
-    LIBS="$old_LIBS"
-
-    AC_SUBST([RPC_CFLAGS])
-    AC_SUBST([RPC_LIBS])
-])
-
 AC_OUTPUT([Makefile src/Makefile])
