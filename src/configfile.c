@@ -272,6 +272,11 @@ void read_config(char *configfile)
 
 }
 
+/*
+ * Look at the directory specified by 'path' and add any executable
+ * files in there to the test list.
+ */
+
 static void add_test_binaries(const char *path)
 {
 	DIR *d;
