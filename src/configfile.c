@@ -25,6 +25,7 @@
 
 static void add_test_binaries(const char *path);
 static void set_file_list_change(int change, int linecount);
+static void parse_arg_val(char *arg, char *val, int linecount);
 
 #define ADMIN			"admin"
 #define CHANGE			"change"
@@ -169,7 +170,6 @@ void read_config(char *configfile)
 	}
 
 	while (getline(&line, &n, wc) != -1) {
-		int itmp = 0;
 		linecount++;
 
 		/* find first non-white space character and check for blank/commented lines. */
@@ -192,6 +192,42 @@ void read_config(char *configfile)
 		/* remove trailing white-space characters for easier parsing. */
 		trim_white(val);
 		trim_white(arg);
+
+		/* do the 'arg'=something search to set variable='val'. */
+		parse_arg_val(arg, val, linecount);
+	}
+
+	if (line)
+		free(line);
+
+	if (fclose(wc) != 0) {
+		fatal_error(EX_SYSERR, "Error closing file \"%s\" (%s)", configfile, strerror(errno));
+	}
+
+	add_test_binaries(test_dir);
+
+	if (tint <= 0) {
+		fatal_error(EX_SYSERR, "Parameters %s = %d in file \"%s\" must be > 0", INTERVAL, tint, configfile);
+	}
+
+	/* compute 5 & 15 minute averages if not given. */
+	if (maxload1 && !maxload5)
+		maxload5 = maxload1 * 3 / 4;
+
+	if (maxload1 && !maxload15)
+		maxload15 = maxload1 / 2;
+
+}
+
+/*
+ * Perform the task of looking for 'arg' to be a known term and then setting
+ * the related parameter to be 'val'. If no match is found then report the
+ * discrepancy.
+ */
+
+static void parse_arg_val(char *arg, char *val, int linecount)
+{
+	int itmp = 0;
 
 		/* Search for a match. Note that the read_*_func() calls deal with a zero-length 'val' as needed. */
 		if (READ_LIST(FILENAME, &file_list) == 0) {
@@ -235,28 +271,6 @@ void read_config(char *configfile)
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}
-	}
-
-	if (line)
-		free(line);
-
-	if (fclose(wc) != 0) {
-		fatal_error(EX_SYSERR, "Error closing file \"%s\" (%s)", configfile, strerror(errno));
-	}
-
-	add_test_binaries(test_dir);
-
-	if (tint <= 0) {
-		fatal_error(EX_SYSERR, "Parameters %s = %d in file \"%s\" must be > 0", INTERVAL, tint, configfile);
-	}
-
-	/* compute 5 & 15 minute averages if not given. */
-	if (maxload1 && !maxload5)
-		maxload5 = maxload1 * 3 / 4;
-
-	if (maxload1 && !maxload15)
-		maxload15 = maxload1 / 2;
-
 }
 
 /*
