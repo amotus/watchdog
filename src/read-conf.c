@@ -106,6 +106,7 @@ char *str_start(char *p)
  *	arg		: String of what variable has been found.
  *	val		: String of the corresponding value.
  *	name	: The searched-for case for 'arg' (if matched, then parse).
+ *	found	: Counter for found values (incremented by one if match found).
  *	imin	: Lower limit of numeric range (if imin!=imax).
  *	imax	: Upper limit of numeric range (if imin!=imax).
  *	iv		: Pointer to an integer that is set on suitable match.
@@ -113,7 +114,7 @@ char *str_start(char *p)
  * The return value is 0 if arg=name
  */
 
-int read_int_func(char *arg, char *val, const char *name, int imin, int imax, int *iv)
+int read_int_func(char *arg, char *val, const char *name, int *found, int imin, int imax, int *iv)
 {
 	int rv = -1;		/* Assume wrong/error case. */
 
@@ -141,6 +142,7 @@ int read_int_func(char *arg, char *val, const char *name, int imin, int imax, in
 		}
 	}
 
+	if (rv == 0) *found += 1;
 	return rv;
 }
 
@@ -161,7 +163,7 @@ int read_int_func(char *arg, char *val, const char *name, int imin, int imax, in
  * to malloc() or similar).
  */
 
-int read_string_func(char *arg, char *val, const char *name, string_read_e mode, char **str)
+int read_string_func(char *arg, char *val, const char *name, int *found, string_read_e mode, char **str)
 {
 	int rv = -1;
 
@@ -190,6 +192,7 @@ int read_string_func(char *arg, char *val, const char *name, string_read_e mode,
 		}
 	}
 
+	if (rv == 0) *found += 1;
 	return rv;
 }
 
@@ -199,7 +202,7 @@ int read_string_func(char *arg, char *val, const char *name, string_read_e mode,
  * in read-conf.h
  */
 
-int read_enumerated_func(char *arg, char *val, const char *name, const read_list_t list[], int *iv)
+int read_enumerated_func(char *arg, char *val, const char *name, int *found, const read_list_t list[], int *iv)
 {
 	int rv = -1;
 
@@ -227,6 +230,7 @@ int read_enumerated_func(char *arg, char *val, const char *name, const read_list
 		}
 	}
 
+	if (rv == 0) *found += 1;
 	return rv;
 }
 
@@ -235,7 +239,7 @@ int read_enumerated_func(char *arg, char *val, const char *name, const read_list
  * adds it to the linked-list.
  */
 
-int read_list_func(char *arg, char *val, const char *name, int version, struct list **list)
+int read_list_func(char *arg, char *val, const char *name, int *found, int version, struct list **list)
 {
 	int rv = -1;
 
@@ -250,6 +254,7 @@ int read_list_func(char *arg, char *val, const char *name, int version, struct l
 		}
 	}
 
+	if (rv == 0) *found += 1;
 	return rv;
 }
 

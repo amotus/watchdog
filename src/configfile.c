@@ -141,13 +141,15 @@ READ_LIST_END()
  * integer range checking (0=0 so not checked), and assume all strings can be blank and
  * enumerated choices are Yes/No, but in future we could add such settings to the #define'd
  * list of names above.
+ *
+ * NOTE: We assume these are used with local variables 'arg' 'val' and 'found' present!
  */
 
-#define READ_INT(name, iv)		read_int_func(		 arg, val, name, 0, 0, iv)
-#define READ_STRING(name, str)	read_string_func(	 arg, val, name, Read_allow_blank, str)
-#define READ_YESNO(name, iv)	read_enumerated_func(arg, val, name, Yes_No_list, iv)
-#define READ_YN_AUTO(name, iv)	read_enumerated_func(arg, val, name, YN_Auto_list, iv)
-#define READ_LIST(name, list)	read_list_func(		 arg, val, name, 0, list)
+#define READ_INT(name, iv)		read_int_func(		 arg, val, name, &found, 0, 0, iv)
+#define READ_STRING(name, str)	read_string_func(	 arg, val, name, &found, Read_allow_blank, str)
+#define READ_YESNO(name, iv)	read_enumerated_func(arg, val, name, &found, Yes_No_list, iv)
+#define READ_YN_AUTO(name, iv)	read_enumerated_func(arg, val, name, &found, YN_Auto_list, iv)
+#define READ_LIST(name, list)	read_list_func(		 arg, val, name, &found, 0, list)
 
 /*
  * Open the configuration file, read & parse it, and set the global configuration variables to those values.
@@ -228,48 +230,68 @@ void read_config(char *configfile)
 static void parse_arg_val(char *arg, char *val, int linecount)
 {
 	int itmp = 0;
+	int found = 0;
 
-	/* Search for a match. Note that the read_*_func() calls deal with a zero-length 'val' as needed. */
-	if (READ_LIST(FILENAME, &file_list) == 0) {
-	} else if (READ_INT(CHANGE, &itmp) == 0) {
+	/*
+	 * Search for a match.
+	 *
+	 * Note #1: The read_*_func() calls deal with a zero-length 'val' as needed.
+	 *
+	 * Note #2: The READ_INT() and similar macros assume the variables 'arg',
+	 *			'val' and 'found' are present - hence the apparent minimal
+	 *			reference to them in the code below!
+	 *
+	 * Note #3: There should only be one match - but we report any code errors
+	 *			that result in 2 or more 'arg' matches in the functions below.
+	 */
+
+	if (READ_INT(CHANGE, &itmp) == 0) {
 		set_file_list_change(itmp, linecount);
-	} else if (READ_LIST(SERVERPIDFILE, &pidfile_list) == 0) {
-	} else if (READ_INT(PINGCOUNT, &pingcount) == 0) {
-	} else if (READ_LIST(PING, &target_list) == 0) {
-	} else if (READ_LIST(INTERFACE, &iface_list) == 0) {
-	} else if (READ_YESNO(REALTIME, &realtime) == 0) {
-	} else if (READ_INT(PRIORITY, &schedprio) == 0) {
-	} else if (READ_STRING(REPAIRBIN, &repair_bin) == 0) {
-	} else if (READ_INT(REPAIRTIMEOUT, &repair_timeout) == 0) {
-	} else if (READ_LIST(TESTBIN, &tr_bin_list) == 0) {
-	} else if (READ_INT(TESTTIMEOUT, &test_timeout) == 0) {
-	} else if (READ_STRING(HEARTBEAT, &heartbeat) == 0) {
-	} else if (READ_INT(HBSTAMPS, &hbstamps) == 0) {
-	} else if (READ_STRING(ADMIN, &admin) == 0) {
-	} else if (READ_INT(INTERVAL, &tint) == 0) {
-	} else if (READ_INT(LOGTICK, &logtick) == 0) {
+	}
+
+	if (READ_INT(LOGTICK, &logtick) == 0) {
 		ticker = logtick;
-	} else if (READ_STRING(DEVICE, &devname) == 0) {
-	} else if (READ_YN_AUTO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
-	} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
-	} else if (READ_LIST(TEMP, &temp_list) == 0) {
-	} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {
-	} else if (READ_INT(MAXLOAD1, &maxload1) == 0) {
-	} else if (READ_INT(MAXLOAD5, &maxload5) == 0) {
-	} else if (READ_INT(MAXLOAD15, &maxload15) == 0) {
-	} else if (READ_INT(MINMEM, &minpages) == 0) {
-	} else if (READ_INT(ALLOCMEM, &minalloc) == 0) {
-	} else if (READ_STRING(LOGDIR, &logdir) == 0) {
-	} else if (READ_STRING(TESTDIR, &test_dir) == 0) {
-	} else if (READ_YESNO(SOFTBOOT, &softboot) == 0) {
-	} else if (READ_YESNO(TEMPPOWEROFF, &temp_poweroff) == 0) {
-	} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
-	} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
-	} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
-	} else if (READ_INT(VERBOSE, &verbose) == 0) {
-	} else if (READ_YESNO(LOG_KILLED_PIDS, &log_killed_PIDs) == 0) {
-	} else {
+	}
+
+	READ_LIST(FILENAME, &file_list);
+	READ_LIST(SERVERPIDFILE, &pidfile_list);
+	READ_INT(PINGCOUNT, &pingcount);
+	READ_LIST(PING, &target_list);
+	READ_LIST(INTERFACE, &iface_list);
+	READ_YESNO(REALTIME, &realtime);
+	READ_INT(PRIORITY, &schedprio);
+	READ_STRING(REPAIRBIN, &repair_bin);
+	READ_INT(REPAIRTIMEOUT, &repair_timeout);
+	READ_LIST(TESTBIN, &tr_bin_list);
+	READ_INT(TESTTIMEOUT, &test_timeout);
+	READ_STRING(HEARTBEAT, &heartbeat);
+	READ_INT(HBSTAMPS, &hbstamps);
+	READ_STRING(ADMIN, &admin);
+	READ_INT(INTERVAL, &tint);
+	READ_STRING(DEVICE, &devname);
+	READ_YN_AUTO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout);
+	READ_INT(DEVICE_TIMEOUT, &dev_timeout);
+	READ_LIST(TEMP, &temp_list);
+	READ_INT(MAXTEMP, &maxtemp);
+	READ_INT(MAXLOAD1, &maxload1);
+	READ_INT(MAXLOAD5, &maxload5);
+	READ_INT(MAXLOAD15, &maxload15);
+	READ_INT(MINMEM, &minpages);
+	READ_INT(ALLOCMEM, &minalloc);
+	READ_STRING(LOGDIR, &logdir);
+	READ_STRING(TESTDIR, &test_dir);
+	READ_YESNO(SOFTBOOT, &softboot);
+	READ_YESNO(TEMPPOWEROFF, &temp_poweroff);
+	READ_INT(SIGTERM_DELAY, &sigterm_delay);
+	READ_INT(RETRYTIMEOUT, &retry_timeout);
+	READ_INT(REPAIRMAX, &repair_max);
+	READ_INT(VERBOSE, &verbose);
+	READ_YESNO(LOG_KILLED_PIDS, &log_killed_PIDs);
+
+	if (found == 0) {
 		log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
+	} else if (found > 1) {
+		log_message(LOG_ERR, "Multiple matches at line %d of config file: %s=%s", linecount, arg, val);
 	}
 }
 

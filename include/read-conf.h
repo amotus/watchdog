@@ -19,11 +19,11 @@ typedef enum {
 void trim_white(char *buf);
 char *str_start(char *p);
 
-int read_int_func(char *arg, char *val, const char *name, int imin, int imax, int *iv);
-int read_string_func(char *arg, char *val, const char *name, string_read_e mode, char **str);
-int read_enumerated_func(char *arg, char *val, const char *name, const read_list_t list[], int *iv);
+int read_int_func(char *arg, char *val, const char *name, int *found, int imin, int imax, int *iv);
+int read_string_func(char *arg, char *val, const char *name, int *found, string_read_e mode, char **str);
+int read_enumerated_func(char *arg, char *val, const char *name, int *found, const read_list_t list[], int *iv);
 
-int read_list_func(char *arg, char *val, const char *name, int version, struct list **list);
+int read_list_func(char *arg, char *val, const char *name, int *found, int version, struct list **list);
 
 void add_list(struct list **list, const char *name, int version);
 void free_list(struct list **list);
