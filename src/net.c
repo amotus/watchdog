@@ -62,13 +62,100 @@ static int in_cksum(unsigned short *addr, int len)
 }
 
 /*
+ * Send out a ping packet of sequence count 'i' and ID from 'daemon_pid' value.
+ *
+ * Return value is the same as 'ecode' and non-zero on error case.
+ */
+static int send_ping(char *target, int sock_fp, struct sockaddr to, int i, int *ecode)
+{
+	unsigned char outpack[MAXPACKET];
+	memset(outpack, 0, sizeof(outpack));
+	struct icmphdr *icp = (struct icmphdr *)outpack;
+	int err = ENOERR;
+
+	/* setup a ping message */
+	icp->type = ICMP_ECHO;
+	icp->code = icp->checksum = 0;
+	icp->un.echo.sequence = htons(i + 1);
+	icp->un.echo.id = htons(daemon_pid);	/* ID */
+
+	/* compute ICMP checksum here */
+	icp->checksum = in_cksum((unsigned short *)icp, DATALEN + 8);
+
+	/* and send it out */
+	if (sendto(sock_fp, (char *)outpack, DATALEN + 8, 0, &to, sizeof(struct sockaddr)) < 0) {
+		err = errno;
+
+		/* if our kernel tells us the network is unreachable we are done */
+		if (err == ENETUNREACH) {
+			log_message(LOG_ERR, "network is unreachable (target: %s)", target);
+		} else {
+			log_message(LOG_ERR, "sendto gave error for target %s = %d = '%s'", target, err, strerror(err));
+		}
+	}
+
+	*ecode = err;
+
+return err;
+}
+
+/*
+ * Look for a ping reply. We check it is our ping by comparing the ID and sequence
+ * count to see if they match.
+ *
+ * Return value is non-zero on something significant: either an error or finding
+ * one of our ping's response. The 'ecode' value shows which it was (0 if good).
+ *
+ */
+static int found_ping(unsigned char *packet, int sock_fp, struct sockaddr to, int i,
+					  int *ecode, fd_set *fdmask, struct timespec *dtimeout)
+{
+	struct sockaddr_in *to_in = (struct sockaddr_in *)&to;
+	struct sockaddr_in from;
+	socklen_t fromlen;
+
+	if (pselect(sock_fp + 1, fdmask, NULL, NULL, dtimeout, NULL) >= 1) {
+		/* read reply */
+		fromlen = sizeof(from);
+		if (recvfrom(sock_fp, packet, PKBUF_SIZE, 0, (struct sockaddr *)&from, &fromlen) < 0) {
+			int err = errno;
+
+			if (err != EINTR) {
+				log_message(LOG_ERR, "recvfrom gave errno = %d = '%s'", err, strerror(err));
+				*ecode = err;
+				return 1;
+			}
+		} else {
+			/* check if packet is our ECHO */
+			struct icmphdr *icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
+
+			if (icp->type == ICMP_ECHOREPLY) {
+				int rcv_id  = ntohs(icp->un.echo.id);
+				int rcv_seq = ntohs(icp->un.echo.sequence);
+
+				/* Have ping reply, but is it the one we just sent? */
+				if (rcv_id  == daemon_pid &&
+					rcv_seq == (i + 1) &&
+					from.sin_addr.s_addr == to_in->sin_addr.s_addr) {
+
+					*ecode = ENOERR;
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+/*
  * Check network / machine is accessible via 'ping' packet.
  */
 
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count)
 {
 	int i;
-	unsigned char outpack[MAXPACKET];
+	int err = 0;
 	struct timespec tmax;
 	ldiv_t d;
 
@@ -78,8 +165,6 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	if (count < 1)
 		return (EINVAL);
 
-	memset(outpack, 0, sizeof(outpack));
-
 	/* set the timeout value */
 	d = ldiv(time, count);
 	tmax.tv_sec = d.quot;
@@ -88,35 +173,11 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 	/* try "ping-count" times */
 	for (i = 0; i < count; i++) {
-
-		struct sockaddr_in from;
 		fd_set fdmask;
-		socklen_t fromlen;
 		struct timespec tstart, timeout, dtimeout;
-		struct icmphdr *icp = (struct icmphdr *)outpack;
-		struct sockaddr_in *to_in = (struct sockaddr_in *)&to;
 
-		/* setup a ping message */
-		icp->type = ICMP_ECHO;
-		icp->code = icp->checksum = 0;
-		icp->un.echo.sequence = htons(i + 1);
-		icp->un.echo.id = htons(daemon_pid);	/* ID */
-
-		/* compute ICMP checksum here */
-		icp->checksum = in_cksum((unsigned short *)icp, DATALEN + 8);
-
-		/* and send it out */
-		if (sendto(sock_fp, (char *)outpack, DATALEN + 8, 0, &to, sizeof(struct sockaddr)) < 0) {
-			int err = errno;
-
-			/* if our kernel tells us the network is unreachable we are done */
-			if (err == ENETUNREACH) {
-				log_message(LOG_ERR, "network is unreachable (target: %s)", target);
-			} else {
-				log_message(LOG_ERR, "sendto gave error for target %s = %d = '%s'", target, err, strerror(err));
-			}
-
-			return (err);
+		if (send_ping(target, sock_fp, to, i, &err)) {
+			return err;
 		}
 
 		clock_gettime(CLOCK_MONOTONIC, &tstart);
@@ -133,48 +194,17 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			if ((long)dtimeout.tv_sec < 0)
 				break;
 
-#if 0
-			if (verbose && logtick && ticker == 1)
-				log_message(LOG_DEBUG, "ping select timeout = %2ld.%06ld seconds",
-				       dtimeout.tv_sec, dtimeout.tv_usec);
-#endif
-
-			if (pselect(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout, NULL) >= 1) {
-				/* read reply */
-				fromlen = sizeof(from);
-				if (recvfrom(sock_fp, packet, PKBUF_SIZE, 0, (struct sockaddr *)&from, &fromlen) < 0) {
-					int err = errno;
-
-					if (err != EINTR) {
-						log_message(LOG_ERR, "recvfrom gave errno = %d = '%s'", err, strerror(err));
-						return (err);
-					}
-				} else {
-					/* check if packet is our ECHO */
-					icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
-
-					if (icp->type == ICMP_ECHOREPLY) {
-						int rcv_id  = ntohs(icp->un.echo.id);
-						int rcv_seq = ntohs(icp->un.echo.sequence);
-
-						/* Have ping reply, but is it the one we just sent? */
-						if (rcv_id  == daemon_pid &&
-							rcv_seq == (i + 1) &&
-							from.sin_addr.s_addr == to_in->sin_addr.s_addr) {
-
-							if (verbose && logtick && ticker == 1) {
-								/* Report time since tstart in milliseconds (like 'ping' program). */
-								double msec;
-								clock_gettime(CLOCK_MONOTONIC, &dtimeout);
-								timespecsub(&dtimeout, &tstart, &dtimeout);
-								msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-9 * dtimeout.tv_nsec);
-								log_message(LOG_DEBUG, "got answer on ping=%d from target %-15s time=%.3fms", i+1, target, msec);
-							}
-
-							return (ENOERR);
-						}
-					}
+			if (found_ping(packet, sock_fp, to, i, &err, &fdmask, &dtimeout)) {
+				/* If successful and verbose, report this. */
+				if (err == 0 && verbose && logtick && ticker == 1) {
+					/* Report time since tstart in milliseconds (like 'ping' program). */
+					double msec;
+					clock_gettime(CLOCK_MONOTONIC, &dtimeout);
+					timespecsub(&dtimeout, &tstart, &dtimeout);
+					msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-9 * dtimeout.tv_nsec);
+					log_message(LOG_DEBUG, "got answer on ping=%d from target %-15s time=%.3fms", i+1, target, msec);
 				}
+				return err;
 			}
 		}
 	}
