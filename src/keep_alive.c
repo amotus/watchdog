@@ -26,10 +26,12 @@
 
 #include "extern.h"
 #include "watch_err.h"
+#include "gettime.h"
 
 static int watchdog_fd = -1;
 static int timeout_used = TIMER_MARGIN;
 static int Refresh_using_ioctl = FALSE;
+static struct timespec tlast = {0, 0};
 
 /*
  * Open the watchdog timer (if name non-NULL) and set the time-out value (if non-zero).
@@ -64,6 +66,9 @@ int open_watchdog(char *name, int timeout)
 			}
 		}
 	}
+
+	/* Start timer for minimum 'ping' on device open. */
+	clock_gettime(CLOCK_MONOTONIC, &tlast);
 
 	/* The IT8728 on Gigabyte motherboard (and similar) would trip due to the normal
 	 * refresh in the device driver failing to reset the timer for no obvious reason
@@ -178,13 +183,49 @@ int set_watchdog_timeout(int timeout)
 	return rv;
 }
 
+/*
+ * Test to see if "a - b > td" for a time-out indication.
+ *
+ * Return zero if a-b is between 0 and td.
+ *
+ * Return non-zero if a-b is negative (clock stepped?) or greater than td
+ */
+
+static int timespecpast(const struct timespec *a, const struct timespec *b, const struct timespec *td)
+{
+	struct timespec tdiff;
+	int ret = 0;
+
+	/* Compute "a - b" */
+	timespecsub(a, b, &tdiff);
+
+	if (tdiff.tv_sec < 0 || timespeccmp(&tdiff, td, >)) {
+		ret = 1;
+	}
+
+	if (verbose > 1) log_message(LOG_DEBUG, "Time from last refresh = %ld.%09ld => %d", tdiff.tv_sec, tdiff.tv_nsec, ret);
+	return ret;
+}
+
 /* write to the watchdog device */
 int keep_alive(void)
 {
 	int err = ENOERR;
+	struct timespec tnow;
+	const struct timespec tminimum = {0, NSEC/2}; /* Set to 0.5 seconds minimum 'ping' time. */
 
 	if (watchdog_fd == -1)
 		return (ENOERR);
+
+	/* Check if we have passed minimum period. */
+	clock_gettime(CLOCK_MONOTONIC, &tnow);
+
+	if (timespecpast(&tnow, &tlast, &tminimum) == 0) {
+		return (ENOERR);
+	}
+
+	/* Once we are going to feed the dog, save this time for next check. */
+	tlast = tnow;
 
 	if (Refresh_using_ioctl) {
 		int timeout = timeout_used;
