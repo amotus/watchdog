@@ -479,6 +479,7 @@ int main(int argc, char *const argv[])
 	swait = 50000;
 	twait = (tint * 1000000) - swait;
 
+	xusleep(swait);
 	/* main loop: update after <tint> seconds */
 	while (_running) {
 		wd_action(keep_alive(), repair_bin, NULL);
