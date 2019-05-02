@@ -19,20 +19,6 @@
 #include "xmalloc.h"
 #include "logmessage.h"
 
-void *xmalloc(size_t size)
-{
-	void *t;
-
-	if (size == 0)
-		return NULL;
-
-	t = malloc(size);
-	if (t == NULL)
-		fatal_error(EX_SYSERR, "xmalloc failed for %lu bytes", (unsigned long)size);
-
-	return t;
-}
-
 void *xcalloc(size_t nmemb, size_t size)
 {
 	void *t;
@@ -57,20 +43,6 @@ char *xstrdup(const char *s)
 	t = strdup(s);
 	if (t == NULL)
 		fatal_error(EX_SYSERR, "xstrdup failed for %lu byte string", (unsigned long)strlen(s));
-
-	return t;
-}
-
-char *xstrndup(const char *s, int n)
-{
-	char *t;
-
-	if (s == NULL || n < 0)
-		fatal_error(EX_SOFTWARE, "bad xstrndup call (%sn = %d)", s == NULL ? "" : "s = NULL, ", n);
-
-	t = xmalloc(n + 1);
-	strncpy(t, s, n);
-	t[n] = 0;
 
 	return t;
 }
