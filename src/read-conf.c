@@ -218,6 +218,7 @@ int read_enumerated_func(char *arg, char *val, const char *name, int *found, con
 					{
 					*iv = list[ii].value;
 					if (verbose) log_message(LOG_DEBUG, "Variable '%s' found as '%s' = %d", arg, val, *iv);
+					*found += 1;
 					return 0;
 					}
 				ii++;
