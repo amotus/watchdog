@@ -80,7 +80,7 @@ int main(int argc, char *const argv[])
 	long count_max = 0L;
 	int c;
 	char *progname;
-	unsigned long swait, twait;
+	unsigned long twait;
 
 	/* allow all options watchdog understands too */
 	char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:X:";
@@ -163,12 +163,10 @@ int main(int argc, char *const argv[])
 
 	lock_our_memory(realtime, schedprio, daemon_pid);
 
-	swait = 50000;
-	twait = (tint * 1000000) - swait;
+	twait = (tint * 1000000);
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {
-		xusleep(swait);
 		keep_alive();
 		/* finally sleep some seconds */
 		xusleep(twait);
