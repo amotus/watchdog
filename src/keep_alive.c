@@ -203,7 +203,10 @@ static int timespecpast(const struct timespec *a, const struct timespec *b, cons
 		ret = 1;
 	}
 
-	if (verbose > 1) log_message(LOG_DEBUG, "Time from last refresh = %ld.%09ld => %d", tdiff.tv_sec, tdiff.tv_nsec, ret);
+	if (verbose > 1) {
+		log_message(LOG_DEBUG, "Time from last refresh = %ld.%09ld => %d", tdiff.tv_sec, tdiff.tv_nsec, ret);
+	}
+
 	return ret;
 }
 
