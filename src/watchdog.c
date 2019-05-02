@@ -525,12 +525,12 @@ int main(int argc, char *const argv[])
 			do_check(check_bin(act->name, test_timeout, act->version), repair_bin, act);
 
 		/* in case test binaries return quickly */
-		usleep(swait);
+		xusleep(swait);
 		check_bin(NULL, test_timeout, 0);
 
 		/* finally sleep for a full cycle */
 		/* we have just triggered the device with the last check */
-		usleep(twait);
+		xusleep(twait);
 
 		count++;
 

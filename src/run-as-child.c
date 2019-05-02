@@ -180,9 +180,9 @@ int run_func_as_child(int timeout,
 			keep_alive();
 
 			if (ii < num_wait) {
-				usleep(wait_val[ii]);	/* sequence of short delays for < 1s. */
+				xusleep(wait_val[ii]);	/* sequence of short delays for < 1s. */
 			} else {
-				usleep(1000000);		/* then 1.0s waits for "timeout" total seconds. */
+				xusleep(1000000);		/* then 1.0s waits for "timeout" total seconds. */
 			}
 
 			ret = waitpid(child_pid, &result, WNOHANG);
@@ -221,7 +221,7 @@ int run_func_as_child(int timeout,
 			/* Seems that SIGTERM did not work, try non-ignorable signal. */
 			kill_process_tree(child_pid, SIGKILL);
 			/* Get the result to stop appearance of this as a zombie process. */
-			usleep(1000);
+			xusleep(1000);
 			waitpid(child_pid, &result, WNOHANG);
 		}
 

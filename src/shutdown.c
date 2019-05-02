@@ -77,7 +77,7 @@ void terminate(int ecode)
 	close_watchdog();
 	remove_pid_file();
 	close_logging();
-	usleep(100000);		/* 0.1s to make sure log is written */
+	xusleep(100000);		/* 0.1s to make sure log is written */
 	exit(ecode);
 }
 

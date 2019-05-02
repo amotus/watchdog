@@ -150,7 +150,7 @@ int wd_daemon(int nochdir, int noclose)
 		_exit(1);
 	} else if (child_pid > 0) {
 		/* fork was OK, give child time to write PID file. */
-		usleep(10000);
+		xusleep(10000);
 		_exit(0);
 	}
 	/* now we're free */

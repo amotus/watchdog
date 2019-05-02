@@ -5,5 +5,6 @@ void *xmalloc (size_t size);
 void *xcalloc (size_t nmemb, size_t size);
 char *xstrdup (const char *s);
 char *xstrndup (const char *s, int n);
+int xusleep(const long usec);
 
 #endif /*_XMALLOC_H*/

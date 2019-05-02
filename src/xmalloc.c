@@ -14,6 +14,7 @@
 #endif
 
 #include <stdlib.h>
+#include <time.h>
 
 #include "xmalloc.h"
 #include "logmessage.h"
@@ -72,4 +73,26 @@ char *xstrndup(const char *s, int n)
 	t[n] = 0;
 
 	return t;
+}
+
+int xusleep(const long usec)
+{
+	const long US_PER_SEC = 1000000L;
+
+	struct timespec req;
+	struct timespec rem;
+	ldiv_t d;
+
+	/* Skip obvious error case. */
+	if (usec < 0) {
+		return EINVAL;
+	}
+
+	/* Convert microseconds in to seconds. */
+	d = ldiv(usec, US_PER_SEC);
+	req.tv_sec = d.quot;
+	/* Convert remainder from microseconds to nanoseconds. */
+	req.tv_nsec = d.rem * 1000L;
+	/* Use more modern call safely for microsecond values > 1 second. */
+	return nanosleep(&req, &rem);
 }
