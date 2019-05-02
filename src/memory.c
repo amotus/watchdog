@@ -131,7 +131,6 @@ int close_memcheck(void)
 
 int check_allocatable(void)
 {
-	int i;
 	char *mem;
 	size_t len = EXEC_PAGESIZE * (size_t)minalloc;
 
@@ -144,10 +143,10 @@ int check_allocatable(void)
 	mem = mmap(NULL, len, PROT_READ | PROT_WRITE,
 			 MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, 0, 0);
 	if (mem == MAP_FAILED) {
-		i = errno;
+		int err = errno;
 		log_message(LOG_ALERT, "cannot allocate %lu bytes (errno = %d = '%s')",
-			    (unsigned long)len, i, strerror(i));
-		return i;
+			    (unsigned long)len, err, strerror(err));
+		return err;
 	}
 
 	munmap(mem, len);
