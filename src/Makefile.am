@@ -14,7 +14,11 @@ watchdog_LDADD = -lrt
 wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmalloc.c \
 			configfile.c keep_alive.c read-conf.c sigterm.c
 
+wd_keepalive_LDADD = -lrt
+
 wd_identify_SOURCES = wd_identify.c logmessage.c xmalloc.c configfile.c read-conf.c
+
+wd_identify_LDADD = -lrt
 
 AM_CPPFLAGS = -I@top_srcdir@/include
 
