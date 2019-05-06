@@ -215,7 +215,7 @@ int keep_alive(void)
 {
 	int err = ENOERR;
 	struct timespec tnow;
-	const struct timespec tminimum = {0, NSEC/2}; /* Set to 0.5 seconds minimum 'ping' time. */
+	const struct timespec tminimum = {0, NSEC/5}; /* Set to 0.2 seconds minimum 'ping' time. */
 
 	if (watchdog_fd == -1)
 		return (ENOERR);
