@@ -70,6 +70,11 @@ refresh operation. Might help if your watchdog trips by itself when the first
 timeout interval elapses. Default is 'auto' for IT87 fix-up but this can be
 disabled with 'no' or forced for other modules with 'yes'.
 .TP
+watchdog-refresh-ignore-errors = <yes|no>
+Ignore errors reported by writing to the watchdog device. Typically this is used
+for systems that have broken implementations of the IPMI driver to avoid a reboot
+loop.
+.TP
 watchdog-timeout = <timeout>
 Set the watchdog device timeout during startup.  If not set, a default is used
 that should be set to the kernel timer margin at compile time.

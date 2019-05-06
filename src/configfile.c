@@ -31,6 +31,7 @@ static void parse_arg_val(char *arg, char *val, int linecount);
 #define CHANGE			"change"
 #define DEVICE			"watchdog-device"
 #define DEVICE_USE_SETTIMEOUT	"watchdog-refresh-use-settimeout"
+#define DEVICE_IGNORE_ERRORS	"watchdog-refresh-ignore-errors"
 #define DEVICE_TIMEOUT		"watchdog-timeout"
 #define	FILENAME		"file"
 #define INTERFACE		"interface"
@@ -100,6 +101,7 @@ char *heartbeat = NULL;
 int hbstamps = 300;
 
 int refresh_use_settimeout = ENUM_AUTO;
+int refresh_ignore_errors = FALSE;
 int realtime = FALSE;
 
 /* Self-repairing binaries list */
@@ -270,6 +272,7 @@ static void parse_arg_val(char *arg, char *val, int linecount)
 	READ_INT(INTERVAL, &tint);
 	READ_STRING(DEVICE, &devname);
 	READ_YN_AUTO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout);
+	READ_YESNO(DEVICE_IGNORE_ERRORS, &refresh_ignore_errors);
 	READ_INT(DEVICE_TIMEOUT, &dev_timeout);
 	READ_LIST(TEMP, &temp_list);
 	READ_INT(MAXTEMP, &maxtemp);

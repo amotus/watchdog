@@ -105,6 +105,7 @@ extern char *heartbeat;
 extern int hbstamps;
 
 extern int refresh_use_settimeout;
+extern int refresh_ignore_errors;
 extern int realtime;
 
 extern struct list *tr_bin_list;

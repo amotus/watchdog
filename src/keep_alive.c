@@ -244,6 +244,15 @@ int keep_alive(void)
 		}
 	}
 
+	/*
+	 * If we set this option then we simply ignore any errors reported by writing to
+	 * the watchdog device. Typically for broken IPMI implementations such as:
+	 * https://support.gfi.com/hc/en-us/articles/360012894154-IPMI-Watchdog-Response-Error
+	 */
+	if (refresh_ignore_errors) {
+		err = ENOERR;
+	}
+
 	/* MJ 20/2/2001 write a heartbeat to a file outside the syslog, because:
 	   - there is no guarantee the system logger is up and running
 	   - easier and quicker to parse checkpoint information */
