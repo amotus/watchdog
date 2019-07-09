@@ -65,7 +65,7 @@ int open_memcheck(void)
 int check_memory(void)
 {
 	char buf[2048], *ptr1, *ptr2;
-	unsigned int free, freemem, freeswap;
+	long free, freemem, freeswap;
 	int n;
 
 	/* is the memory file open? */
@@ -102,10 +102,10 @@ int check_memory(void)
 	free = freemem + freeswap;
 
 	if (verbose && logtick && ticker == 1)
-		log_message(LOG_DEBUG, "currently there are %u + %u kB of free memory+swap available", freemem, freeswap);
+		log_message(LOG_DEBUG, "currently there are %ld + %ld kB of free memory+swap available", freemem, freeswap);
 
 	if (free < minpages * (EXEC_PAGESIZE / 1024)) {
-		log_message(LOG_ERR, "memory %d kB is less than %d pages", free, minpages);
+		log_message(LOG_ERR, "memory %ld kB is less than %d pages", free, minpages);
 		return (ENOMEM);
 	}
 
