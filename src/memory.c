@@ -30,6 +30,8 @@
 
 #define FREEMEM		"MemFree:"
 #define FREESWAP	"SwapFree:"
+#define USED_BUFFER	"Buffers:"
+#define USED_CACHE	"Cached:"
 
 static int mem_fd = -1;
 static const char mem_name[] = "/proc/meminfo";
@@ -96,7 +98,7 @@ int open_memcheck(void)
 int check_memory(void)
 {
 	char buf[2048];
-	long free, freemem, freeswap;
+	long free, freemem, freeswap, used_buffer, used_cache;
 	int n;
 
 	/* is the memory file open? */
@@ -122,10 +124,19 @@ int check_memory(void)
 	/* we only care about integer values */
 	freemem  = read_svalue(buf, FREEMEM);
 	freeswap = read_svalue(buf, FREESWAP);
-	free = freemem + freeswap;
+	used_buffer = read_svalue(buf, USED_BUFFER);
+	used_cache  = read_svalue(buf, USED_CACHE);
+
+	/*
+	 * Compute "free memnory" from what is reported as free, the buffers and
+	 * cache use. When pressed, the kernel will free up buffers & cache for
+	 * other use, but as a result if this measure of "free" gets below a few
+	 * tens of MB then the machine is going to be pretty sick.
+	 */
+	free = freemem + used_buffer + used_cache;
 
 	if (verbose && logtick && ticker == 1)
-		log_message(LOG_DEBUG, "currently there are %ld + %ld kB of free memory+swap available", freemem, freeswap);
+		log_message(LOG_DEBUG, "currently there are %ld + %ld kB of usable memory+swap available", free, freeswap);
 
 	if (free < minpages * (EXEC_PAGESIZE / 1024)) {
 		log_message(LOG_ERR, "memory %ld kB is less than %d pages", free, minpages);
