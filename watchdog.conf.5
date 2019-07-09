@@ -64,6 +64,13 @@ is disabled.  As with min-memory, the page size is taken from the system
 include files. This is an 'active' test and it works by attempting to
 memory-map a block of the configured size.
 .TP
+max-swap = <maxpage>
+Set the maximum amount of swap use. Note that this is in memory pages (4kB on
+x86). Default value is 0 pages which means this test is disabled. Often this
+should be a large portion of available swap, but remember that paging 1GB of
+swap can take several/tens of seconds.
+This is a 'passive' test and works by reading /proc/meminfo
+.TP
 watchdog-device = <device>
 Set the watchdog device name, typically /dev/watchdog. Default is to disable
 keep alive support. This should be tested by running the daemon from the

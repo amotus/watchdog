@@ -30,6 +30,7 @@
 
 #define FREEMEM		"MemFree:"
 #define FREESWAP	"SwapFree:"
+#define TOTALSWAP	"SwapTotal:"
 #define USED_BUFFER	"Buffers:"
 #define USED_CACHE	"Cached:"
 
@@ -67,6 +68,11 @@ static long read_svalue(const char *buf, const char *var)
 	return res;
 }
 
+static long kb_per_page(int pages)
+{
+	return pages * (long)(EXEC_PAGESIZE / 1024);
+}
+
 /*
  * Open the memory information file if such as test is configured.
  */
@@ -77,7 +83,7 @@ int open_memcheck(void)
 
 	close_memcheck();
 
-	if (minpages > 0) {
+	if (minpages > 0 || maxswap > 0) {
 		/* open the memory info file */
 		mem_fd = open(mem_name, O_RDONLY);
 		if (mem_fd == -1) {
@@ -98,8 +104,9 @@ int open_memcheck(void)
 int check_memory(void)
 {
 	char buf[2048];
-	long free, freemem, freeswap, used_buffer, used_cache;
+	long free, freemem, freeswap, used_buffer, used_cache, totalswap, used;
 	int n;
+	int ret = ENOERR;
 
 	/* is the memory file open? */
 	if (mem_fd == -1)
@@ -124,6 +131,7 @@ int check_memory(void)
 	/* we only care about integer values */
 	freemem  = read_svalue(buf, FREEMEM);
 	freeswap = read_svalue(buf, FREESWAP);
+	totalswap = read_svalue(buf, TOTALSWAP);
 	used_buffer = read_svalue(buf, USED_BUFFER);
 	used_cache  = read_svalue(buf, USED_CACHE);
 
@@ -134,16 +142,23 @@ int check_memory(void)
 	 * tens of MB then the machine is going to be pretty sick.
 	 */
 	free = freemem + used_buffer + used_cache;
+	used = totalswap - freeswap;
 
-	if (verbose && logtick && ticker == 1)
-		log_message(LOG_DEBUG, "currently there are %ld + %ld kB of usable memory+swap available", free, freeswap);
-
-	if (free < minpages * (EXEC_PAGESIZE / 1024)) {
-		log_message(LOG_ERR, "memory %ld kB is less than %d pages", free, minpages);
-		return (ENOMEM);
+	if (verbose && logtick && ticker == 1) {
+		log_message(LOG_DEBUG, "currently there are %ld kB usable memory and %ld of %ld swap used", free, used, freeswap);
 	}
 
-	return (ENOERR);
+	if (minpages && (free < kb_per_page(minpages))) {
+		log_message(LOG_ERR, "memory available %ld kB is less than %d pages", free, minpages);
+		ret = ENOMEM;
+	}
+
+	if (maxswap && (used > kb_per_page(maxswap))) {
+		log_message(LOG_ERR, "swap used %ld kB is more than %d pages", used, maxswap);
+		ret = ENOMEM;
+	}
+
+	return ret;
 }
 
 /*

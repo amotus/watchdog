@@ -246,11 +246,11 @@ static void print_info(int sync_it, int force)
 		    maxload1, maxload5, maxload15,
 		    softboot ? "yes" : "no");
 
-	if (minpages == 0 && minalloc == 0)
+	if (minpages == 0 && minalloc == 0 && maxswap == 0)
 		log_message(LOG_INFO, " memory not checked");
 	else
-		log_message(LOG_INFO, " memory: minimum pages = %d free, %d allocatable (%d byte pages)",
-			minpages, minalloc, EXEC_PAGESIZE);
+		log_message(LOG_INFO, " memory: minimum pages = %d free, %d allocatable, max swap %d (%d byte pages)",
+			minpages, minalloc, maxswap, EXEC_PAGESIZE);
 
 	if (target_list == NULL)
 		log_message(LOG_INFO, " ping: no machine to check");

@@ -85,6 +85,7 @@ extern int maxload5;
 extern int maxload15;
 extern int minpages;
 extern int minalloc;
+extern int maxswap;
 extern int maxtemp;
 extern int pingcount;
 extern int temp_poweroff;

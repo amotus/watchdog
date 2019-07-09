@@ -43,6 +43,7 @@ static void parse_arg_val(char *arg, char *val, int linecount);
 #define MAXTEMP			"max-temperature"
 #define MINMEM			"min-memory"
 #define ALLOCMEM		"allocatable-memory"
+#define MAXSWAP			"max-swap"
 #define SERVERPIDFILE		"pidfile"
 #define PING			"ping"
 #define PINGCOUNT		"ping-count"
@@ -81,6 +82,7 @@ int maxload5 = 0;
 int maxload15 = 0;
 int minpages = 0;
 int minalloc = 0;
+int maxswap = 0;
 int maxtemp = 90;
 int pingcount = 3;
 int temp_poweroff = TRUE;
@@ -281,6 +283,7 @@ static void parse_arg_val(char *arg, char *val, int linecount)
 	READ_INT(MAXLOAD15, &maxload15);
 	READ_INT(MINMEM, &minpages);
 	READ_INT(ALLOCMEM, &minalloc);
+	READ_INT(MAXSWAP, &maxswap);
 	READ_STRING(LOGDIR, &logdir);
 	READ_STRING(TESTDIR, &test_dir);
 	READ_YESNO(SOFTBOOT, &softboot);
