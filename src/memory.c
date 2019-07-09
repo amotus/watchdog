@@ -35,6 +35,37 @@ static int mem_fd = -1;
 static const char mem_name[] = "/proc/meminfo";
 
 /*
+ * Read values such as:
+ *
+ * "MemFree:        27337188 kB"
+ *
+ * From the the file to retrun 27337188 in this case.
+ * Return is 0 for failure to parse.
+ */
+
+static long read_svalue(const char *buf, const char *var)
+{
+	long res = 0;
+	char *ptr = NULL;
+
+	if (buf != NULL && var != NULL) {
+		ptr = strstr(buf, var);
+	}
+
+	if (ptr != NULL) {
+		res = atol(ptr + strlen(var));
+	} else if (verbose > 1) {
+		/*
+		 * Report error in parsing, but this could be due to older
+		 * kernel so don't make it an error or too verbose.
+		 */
+		log_message(LOG_DEBUG, "Failed to parse %s for %s", mem_name, var);
+	}
+
+	return res;
+}
+
+/*
  * Open the memory information file if such as test is configured.
  */
 
@@ -64,7 +95,7 @@ int open_memcheck(void)
 
 int check_memory(void)
 {
-	char buf[2048], *ptr1, *ptr2;
+	char buf[2048];
 	long free, freemem, freeswap;
 	int n;
 
@@ -88,17 +119,9 @@ int check_memory(void)
 	/* Force string to be nul-terminated. */
 	buf[n] = 0;
 
-	ptr1 = strstr(buf, FREEMEM);
-	ptr2 = strstr(buf, FREESWAP);
-
-	if (!ptr1 || !ptr2) {
-		log_message(LOG_ERR, "%s contains invalid data (read = %s)", mem_name, buf);
-		return (EINVMEM);
-	}
-
 	/* we only care about integer values */
-	freemem  = atoi(ptr1 + strlen(FREEMEM));
-	freeswap = atoi(ptr2 + strlen(FREESWAP));
+	freemem  = read_svalue(buf, FREEMEM);
+	freeswap = read_svalue(buf, FREESWAP);
 	free = freemem + freeswap;
 
 	if (verbose && logtick && ticker == 1)
