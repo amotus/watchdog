@@ -64,7 +64,7 @@ int open_memcheck(void)
 
 int check_memory(void)
 {
-	char buf[1024], *ptr1, *ptr2;
+	char buf[2048], *ptr1, *ptr2;
 	unsigned int free, freemem, freeswap;
 	int n;
 
