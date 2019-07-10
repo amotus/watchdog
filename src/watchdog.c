@@ -201,6 +201,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 	case EREBOOT:
 	case ERESET:
 	case ETOOHOT:
+	case ENOMEM:
 		/* These are not repairable. */
 		break;
 
