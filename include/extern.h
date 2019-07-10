@@ -117,6 +117,7 @@ extern struct list *iface_list;
 extern struct list *temp_list;
 
 extern struct list *memtimer;
+extern struct list *alloctimer;
 extern struct list *loadtimer;
 
 extern char *repair_bin;

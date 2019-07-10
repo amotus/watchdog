@@ -497,7 +497,7 @@ int main(int argc, char *const argv[])
 		do_check(check_memory(), repair_bin, memtimer);
 
 		/* check allocatable memory */
-		do_check(check_allocatable(), repair_bin, memtimer);
+		do_check(check_allocatable(), repair_bin, alloctimer);
 
 		/* check temperature */
 		for (act = temp_list; act != NULL; act = act->next)

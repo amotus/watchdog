@@ -116,6 +116,7 @@ struct list *temp_list = NULL;
 
 /* Dummy lists for the load averages & memory checking. */
 struct list *memtimer = NULL;
+struct list *alloctimer = NULL;
 struct list *loadtimer = NULL;
 
 char *repair_bin = NULL;
@@ -167,6 +168,7 @@ void read_config(char *configfile)
 	int linecount = 0;
 
 	add_list(&memtimer, "<free-memory>", 0);
+	add_list(&alloctimer, "<alloc-memory>", 0);
 	add_list(&loadtimer, "<load-average>", 0);
 
 	maxload5 = maxload15 = 0;
