@@ -1,3 +1,9 @@
+watchdog (5.16-1) UNRELEASED; urgency=medium
+
+  * New upstream version. (Closes: #767941, #892715)
+
+ -- Michael Meskes <meskes@debian.org>  Thu, 02 Jan 2020 14:37:32 +0100
+
 watchdog (5.15-2) unstable; urgency=medium
 
   * Fix FTCBFS: Let dh_auto_configure pass --host to ./configure
