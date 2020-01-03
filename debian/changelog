@@ -312,7 +312,7 @@ watchdog (5.3.1-4) unstable; urgency=low
 watchdog (5.3.1-3) unstable; urgency=low
 
   * Made sure module is loaded before watchdog is started
-    closes: #423019, #423020 
+    closes: #423019, #423020
 
  -- Michael Meskes <meskes@debian.org>  Thu, 31 May 2007 15:18:14 +0200
 
@@ -414,7 +414,7 @@ watchdog (5.2.4-5) unstable; urgency=low
 watchdog (5.2.4-4) unstable; urgency=medium
 
   * Check for local changes to startup links before changing them
-    
+
  -- Michael Meskes <meskes@debian.org>  Thu, 19 May 2005 19:03:38 +0200
      
 watchdog (5.2.4-3) unstable; urgency=medium
