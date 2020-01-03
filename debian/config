@@ -18,14 +18,7 @@ parse_default() {
     db_set watchdog/module `sed -n 's/^watchdog_module="\(.*\)"/\1/p' "$@"`
 }
 
-if dpkg --compare-versions "$2" le-nl 5.2.4-4
-then
-    # Upgrade quietly from pre-debconf days (<= 5.2.4-4).
-    if parse_default /etc/init.d/watchdog; then
-	db_fset watchdog/run seen true
-	db_fset watchdog/module seen true
-    fi
-elif [ -f /etc/default/watchdog ]
+if [ -f /etc/default/watchdog ]
 then
     # Load previous value (may have been changed manually).
     parse_default /etc/default/watchdog || true
