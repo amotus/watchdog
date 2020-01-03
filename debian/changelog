@@ -1,8 +1,10 @@
 watchdog (5.16-1) UNRELEASED; urgency=medium
 
-  * New upstream version. (Closes: #767941, #892715)
+  * New upstream version. (Closes: #892715)
+  * Updated Portuguese translation (Closes: #873172)
+  * Removed ancient packaging cruft.
 
- -- Michael Meskes <meskes@debian.org>  Thu, 02 Jan 2020 14:37:32 +0100
+ -- Michael Meskes <meskes@debian.org>  Fri, 03 Jan 2020 14:20:27 +0100
 
 watchdog (5.15-2) unstable; urgency=medium
 
