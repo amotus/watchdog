@@ -79,7 +79,7 @@ int write_heartbeat(void)
 	time_t timenow;
 	struct tm *tm;
 	char tbuf[TS_SIZE + 1];
-	char tbufw[TS_SIZE + 1];
+	char tbufw[TS_SIZE + 2];
 
 	if (hb == NULL)
 		return (ENOERR);
