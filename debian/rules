@@ -70,8 +70,4 @@ binary:		binary-indep binary-arch
 source diff:
 	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
 
-checkroot:
-	$(checkdir)
-	test root = "`whoami`"
-
 .PHONY: binary binary-arch binary-indep clean checkroot

@@ -3,6 +3,7 @@ Section: admin
 Priority: optional
 Maintainer: Michael Meskes <meskes@debian.org>
 Build-Depends: debhelper-compat (= 12), po-debconf (>= 0.5.0)
+Rules-Requires-Root: no
 Standards-Version: 4.4.1
 Homepage: http://watchdog.sourceforge.net
 
