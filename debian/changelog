@@ -3,6 +3,7 @@ watchdog (5.16-1) UNRELEASED; urgency=medium
   * New upstream version. (Closes: #892715)
   * Updated Portuguese translation (Closes: #873172)
   * Removed ancient packaging cruft.
+  * Removed build dependency on dh-systemd (Closes: #958602)
 
  -- Michael Meskes <meskes@debian.org>  Fri, 03 Jan 2020 14:20:27 +0100
 
