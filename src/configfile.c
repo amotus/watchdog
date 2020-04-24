@@ -171,8 +171,6 @@ void read_config(char *configfile)
 	add_list(&alloctimer, "<alloc-memory>", 0);
 	add_list(&loadtimer, "<load-average>", 0);
 
-	maxload5 = maxload15 = 0;
-
 	if ((wc = fopen(configfile, "r")) == NULL) {
 		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
 	}
