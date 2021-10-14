@@ -98,14 +98,14 @@ int exec_as_func(int flags, void *ptr)
 			/* Create single string with all command line options. */
 			int ii = 1;
 			char *opt = strdup(":");
-            char *tempOpt;
+
 			while (opt != NULL && arg[ii] != NULL) {
-				tempOpt = realloc(opt, strlen(opt) + strlen(arg[ii]) + 2);
-                if (tempOpt != NULL){
-                    opt = tempOpt;
-                } else {
-                    break;
-                }
+				char *tempOpt = realloc(opt, strlen(opt) + strlen(arg[ii]) + 2);
+				if (tempOpt != NULL){
+					opt = tempOpt;
+				} else {
+					break;
+				}
 				opt = strcat(opt, " ");
 				opt = strcat(opt, arg[ii]);
 				ii++;
