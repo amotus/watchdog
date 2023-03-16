@@ -33,6 +33,7 @@
 #define TOTALSWAP	"SwapTotal:"
 #define USED_BUFFER	"Buffers:"
 #define USED_CACHE	"Cached:"
+#define FREEAVAILMEM	"MemAvailable:"
 
 static int mem_fd = -1;
 static const char mem_name[] = "/proc/meminfo";
@@ -104,7 +105,7 @@ int open_memcheck(void)
 int check_memory(void)
 {
 	char buf[2048];
-	long free, freemem, freeswap, used_buffer, used_cache, totalswap, used;
+	long free, freemem, freeswap, used_buffer, used_cache, totalswap, used, availmem;
 	int n;
 	int ret = ENOERR;
 
@@ -134,14 +135,24 @@ int check_memory(void)
 	totalswap = read_svalue(buf, TOTALSWAP);
 	used_buffer = read_svalue(buf, USED_BUFFER);
 	used_cache  = read_svalue(buf, USED_CACHE);
+	availmem = read_svalue(buf, FREEAVAILMEM);
 
 	/*
 	 * Compute "free memory" from what is reported as free, the buffers and
 	 * cache use. When pressed, the kernel will free up buffers & cache for
 	 * other use, but as a result if this measure of "free" gets below a few
 	 * tens of MB then the machine is going to be pretty sick.
+	 *
+	 * Newer kernels will provide MemAvailable, which is more accurate. Use that
+	 * instead of the calculation if available.
 	 */
-	free = freemem + used_buffer + used_cache;
+
+	if (!availmem) {
+		free = freemem + used_buffer + used_cache;
+	} else {
+		free = availmem;
+	}
+
 	used = totalswap - freeswap;
 
 	if (verbose && logtick && ticker == 1) {
