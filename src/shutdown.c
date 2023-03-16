@@ -29,13 +29,9 @@
 #include "extern.h"
 #include "ext2_mnt.h"
 
-#if defined __GLIBC__
 #include <sys/quota.h>
 #include <sys/swap.h>
 #include <sys/reboot.h>
-#else				/* __GLIBC__ */
-#include <linux/quota.h>
-#endif				/* __GLIBC__ */
 
 #include <unistd.h>
 
