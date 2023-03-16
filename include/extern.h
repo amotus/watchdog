@@ -30,7 +30,11 @@ struct filemode {
 };
 
 struct ifmode {
+#ifdef HAVE_STRTOULL
+	unsigned long long bytes;
+#else
 	unsigned long bytes;
+#endif
 };
 
 struct tempmode {

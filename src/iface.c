@@ -41,11 +41,19 @@ int check_iface(struct list *dev)
 
 			for (; line[i] == ' ' || line[i] == '\t'; i++) ;
 			if (strncmp(line + i, dev->name, strlen(dev->name)) == 0) {
+#ifdef HAVE_STRTOULL
+				unsigned long long bytes = strtoull(line + i + strlen(dev->name) + 1, NULL, 10);
+#else
 				unsigned long bytes = strtoul(line + i + strlen(dev->name) + 1, NULL, 10);
+#endif
 
 				/* do verbose logging */
 				if (verbose && logtick && ticker == 1)
+#ifdef HAVE_STRTOULL
+					log_message(LOG_DEBUG, "device %s received %llu bytes", dev->name, bytes);
+#else
 					log_message(LOG_DEBUG, "device %s received %lu bytes", dev->name, bytes);
+#endif
 
 				if (dev->parameter.iface.bytes == bytes) {
 					fclose(file);

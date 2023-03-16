@@ -47,7 +47,7 @@ AC_FUNC_ALLOCA
 AC_PROG_GCC_TRADITIONAL
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(gethostname select socket strcspn strdup strerror strstr strtoul uname)
+AC_CHECK_FUNCS(gethostname select socket strcspn strdup strerror strstr strtoul strtoull uname)
 
 AC_MSG_CHECKING(whether to log via syslog)
 AC_ARG_ENABLE(syslog,
