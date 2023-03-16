@@ -42,7 +42,7 @@ static const char mem_name[] = "/proc/meminfo";
  *
  * "MemFree:        27337188 kB"
  *
- * From the the file to retrun 27337188 in this case.
+ * From the file to return 27337188 in this case.
  * Return is 0 for failure to parse.
  */
 
@@ -136,7 +136,7 @@ int check_memory(void)
 	used_cache  = read_svalue(buf, USED_CACHE);
 
 	/*
-	 * Compute "free memnory" from what is reported as free, the buffers and
+	 * Compute "free memory" from what is reported as free, the buffers and
 	 * cache use. When pressed, the kernel will free up buffers & cache for
 	 * other use, but as a result if this measure of "free" gets below a few
 	 * tens of MB then the machine is going to be pretty sick.
