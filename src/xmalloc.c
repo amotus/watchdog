@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 
 #include "xmalloc.h"
 #include "logmessage.h"
@@ -54,6 +55,7 @@ int xusleep(const long usec)
 	struct timespec req;
 	struct timespec rem;
 	ldiv_t d;
+	int ret = 0;
 
 	/* Skip obvious error case. */
 	if (usec < 0) {
@@ -66,5 +68,16 @@ int xusleep(const long usec)
 	/* Convert remainder from microseconds to nanoseconds. */
 	req.tv_nsec = d.rem * 1000L;
 	/* Use more modern call safely for microsecond values > 1 second. */
-	return nanosleep(&req, &rem);
+
+#if defined( CLOCK_BOOTTIME )
+	ret = clock_nanosleep(CLOCK_BOOTTIME, 0, &req, &rem);
+	/* Fall-back to nanosleep if clock_nanosleep() does not accept the clockid. */
+	if (ret == EINVAL) {
+#else
+	{
+#endif /*CLOCK_BOOTTIME*/
+		ret = nanosleep(&req, &rem);
+	}
+
+	return ret;
 }
