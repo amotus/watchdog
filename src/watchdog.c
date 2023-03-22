@@ -480,6 +480,15 @@ int main(int argc, char *const argv[])
 	swait = 50000;
 	twait = (tint * 1000000) - swait;
 
+	/* Where there are test binaries configured they will verify that
+	 * process forking is working as well as the execution of the test.
+	 * If no test binaries are specified then add a blank entry to force
+	 * a "dry fork" test.
+	 */
+	if (tr_bin_list == NULL) {
+		add_list(&tr_bin_list, "", 0);
+	}
+
 	/* main loop: update after <tint> seconds */
 	while (_running) {
 		wd_action(keep_alive(), repair_bin, NULL);

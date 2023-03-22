@@ -236,6 +236,8 @@ static int check_processes(const char *name, int *ecode)
  *
  * A time-out of zero will disable the time-out checking, but in that case a blocked child
  * will simply persist indefinitely and no error will be found.
+ *
+ * A zero-length test binary name will reap children and do a dry fork test.
  */
 int check_bin(char *tbinary, int timeout, int version)
 {
@@ -260,6 +262,11 @@ int check_bin(char *tbinary, int timeout, int version)
 
 	child_pid = fork();
 	if (!child_pid) {
+		/* If we have nothing to execute then return as the "dry fork" test. */
+		if (tbinary == NULL || strlen(tbinary) < 1) {
+			exit(0);
+		}
+
 		/* Don't want the stdout and stderr of our test program
 		 * to cause trouble, so make them go to their respective files */
 		int err = reopen_std_files(FLAG_REOPEN_STD_TEST);
