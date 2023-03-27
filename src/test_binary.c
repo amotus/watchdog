@@ -263,7 +263,7 @@ int check_bin(char *tbinary, int timeout, int version)
 	child_pid = fork();
 	if (!child_pid) {
 		/* If we have nothing to execute then return as the "dry fork" test. */
-		if (strlen(tbinary) < 1) {
+		if (strlen(tbinary) < 3) {
 			exit(0);
 		}
 
