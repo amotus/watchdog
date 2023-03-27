@@ -135,6 +135,9 @@ extern int log_killed_PIDs;
 /* From daemon-pid.c */
 extern pid_t daemon_pid;
 
+/* From test_binary.c */
+extern const char DRY_FORK_NAME[];
+
 /* === Function prototypes === */
 
 #ifndef GCC_NORETURN

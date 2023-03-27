@@ -482,11 +482,11 @@ int main(int argc, char *const argv[])
 
 	/* Where there are test binaries configured they will verify that
 	 * process forking is working as well as the execution of the test.
-	 * If no test binaries are specified then add a blank entry to force
+	 * If no test binaries are specified then add a reserved entry to force
 	 * a "dry fork" test.
 	 */
 	if (tr_bin_list == NULL) {
-		add_list(&tr_bin_list, "", 0);
+		add_list(&tr_bin_list, DRY_FORK_NAME, 0);
 	}
 
 	/* main loop: update after <tint> seconds */

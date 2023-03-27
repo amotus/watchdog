@@ -19,6 +19,8 @@
 #define TEST_COMPLETED	1
 #define TEST_BLANK		2
 
+const char DRY_FORK_NAME[] = "<fork test>";
+
 struct process {
 	char proc_name[PATH_MAX];
 	pid_t pid;
@@ -263,7 +265,7 @@ int check_bin(char *tbinary, int timeout, int version)
 	child_pid = fork();
 	if (!child_pid) {
 		/* If we have nothing to execute then return as the "dry fork" test. */
-		if (strlen(tbinary) < 3) {
+		if (strlen(tbinary) < 3 || strcmp(tbinary, DRY_FORK_NAME) == 0) {
 			exit(0);
 		}
 
