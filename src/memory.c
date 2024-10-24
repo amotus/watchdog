@@ -69,9 +69,26 @@ static long read_svalue(const char *buf, const char *var)
 	return res;
 }
 
+
+int get_psize(void)
+{
+static int page_size = 0;
+
+#ifndef _SC_PAGESIZE
+	page_size = EXEC_PAGESIZE;
+#else
+	if (page_size == 0) {
+		page_size = sysconf(_SC_PAGESIZE);
+	}
+#endif
+
+	return page_size;
+}
+
 static long kb_per_page(int pages)
 {
-	return pages * (long)(EXEC_PAGESIZE / 1024);
+
+	return pages * (long)(get_psize() / 1024);
 }
 
 /*

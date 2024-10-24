@@ -48,13 +48,12 @@ predefined minimal value of 2, you have to use the \-f command line option.
 .TP
 min-memory = <minpage>
 Set the minimal amount of memory that has to stay free. Note that
-this is in memory pages (4kB on x86). Default value is 0 pages which means
-this test is disabled. The page size is taken from the system include files.
-The usable memory is computed from MemFree + Buffers + Cached since buffer
-and cache use typically expand to use most free memory but the kernel will
-reclaim this as needed. NOTE: If this measure gets below a few tens of MB then
-the system will page swap aggressively have poorer file system performance due
-to the lack of caching.
+this is in memory pages (typically 4kB on x86, but reported on start up if used).
+Default value is 0 pages which means this test is disabled. The usable memory is
+computed from MemFree + Buffers + Cached since buffer and cache use typically
+expand to use most free memory but the kernel will reclaim this as needed.
+NOTE: If this measure gets below a few tens of MB then the system will page swap
+aggressively have poorer file system performance due to the lack of caching.
 This is a 'passive' test and works by reading /proc/meminfo
 .TP
 allocatable-memory = <minpage>
@@ -65,10 +64,9 @@ include files. This is an 'active' test and it works by attempting to
 memory-map a block of the configured size.
 .TP
 max-swap = <maxpage>
-Set the maximum amount of swap use. Note that this is in memory pages (4kB on
-x86). Default value is 0 pages which means this test is disabled. Often this
-should be a large portion of available swap, but remember that paging 1GB of
-swap can take several/tens of seconds.
+Set the maximum amount of swap use. Note that this is in memory pages. Default
+value is 0 pages which means this test is disabled. Often this should be a large portion
+of available swap, but remember that paging 1GB of swap can take several/tens of seconds.
 This is a 'passive' test and works by reading /proc/meminfo
 .TP
 watchdog-device = <device>

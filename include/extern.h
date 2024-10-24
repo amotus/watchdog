@@ -189,6 +189,7 @@ int check_pidfile(struct list *);
 int check_iface(struct list *);
 
 /** memory.c **/
+int get_psize(void);
 int open_memcheck(void);
 int check_memory(void);
 int close_memcheck(void);

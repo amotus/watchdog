@@ -23,7 +23,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <sys/param.h>		/* For EXEC_PAGESIZE */
 #include <linux/oom.h>
 #include <linux/watchdog.h>
 #ifdef __linux__
@@ -251,7 +250,7 @@ static void print_info(int sync_it, int force)
 		log_message(LOG_INFO, " memory not checked");
 	else
 		log_message(LOG_INFO, " memory: minimum pages = %d free, %d allocatable, max swap %d (%d byte pages)",
-			minpages, minalloc, maxswap, EXEC_PAGESIZE);
+			minpages, minalloc, maxswap, get_psize());
 
 	if (target_list == NULL)
 		log_message(LOG_INFO, " ping: no machine to check");
