@@ -16,7 +16,7 @@ problem.
 
 Okay, if you want to install it manually:
 
-$ autoreconf -i (if you're building from CVS)
+$ autoreconf -i (if you're building from git)
 $ ./configure
 $ make
 $ su
