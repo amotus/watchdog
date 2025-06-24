@@ -5,7 +5,7 @@
 #
 # Erik Rossen <rossen@prolibre.com>
 
-# If one does not change the default watchdog loop time of 10 secords, N=12
+# If one does not change the default watchdog loop time of 10 seconds, N=12
 # will allow two minutes of failures before a reboot is signaled.
 N=12
 

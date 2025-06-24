@@ -11,7 +11,7 @@ DATABASE=$1
 
 #
 # check the state:
-# tnsping returns 0 on success, otherise the return value is 1
+# tnsping returns 0 on success, otherwise the return value is 1
 #
 tnsping $DATABASE > /dev/null 2>&1
 result=$?
