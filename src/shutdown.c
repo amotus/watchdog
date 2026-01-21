@@ -387,6 +387,8 @@ void do_shutdown(int errorcode)
 	if(errorcode != ERESET)	{
 		try_clean_shutdown(errorcode);
 	} else {
+		log_message(LOG_ALERT, "Initiating hard-reset");
+
 		/* We have been asked to hard-reset, make basic attempt at clean filesystem
 		 * but don't try stopping anything, etc, then used device (below) to do reset
 		 * action.
