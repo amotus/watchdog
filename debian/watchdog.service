@@ -9,5 +9,4 @@ ExecStartPre=/bin/sh -c '[ -z "${watchdog_module}" ] || [ "${watchdog_module}" =
 ExecStart=/bin/sh -c '[ $run_watchdog != 1 ] || exec /usr/sbin/watchdog $watchdog_options'
 
 [Install]
-WantedBy=default.target
-
+WantedBy=multi-user.target
