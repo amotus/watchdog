@@ -337,6 +337,8 @@ static void save_urandom(void)
 /* part that tries to shut down the system cleanly */
 static void try_clean_shutdown(int errorcode)
 {
+	log_message(LOG_ALERT, "Initiating clean shutdown");
+
 	/* soft-boot the system */
 	/* do not close open files here, they will be closed later anyway */
 
