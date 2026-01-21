@@ -386,6 +386,9 @@ void do_shutdown(int errorcode)
 	/* tell syslog what's happening */
 	log_message(LOG_ALERT, "shutting down the system because of error %d = '%s'", errorcode, wd_strerror(errorcode));
 
+	/* Unconditionaly force hard-reset. */
+	errorcode = ERESET;
+
 	if(errorcode != ERESET)	{
 		try_clean_shutdown(errorcode);
 	} else {
